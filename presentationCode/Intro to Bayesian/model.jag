@@ -1,0 +1,13 @@
+
+    model {
+    
+    beta0 ~ dnorm(0, 0.001)
+    beta1 ~ dnorm(0, 0.001)
+    beta2 ~ dnorm(0, 0.001)
+
+    for (i in 1:n) {
+    y[i] ~ dbin(p[i], nSamp)
+    logit(p[i]) <- beta0 + beta1 * x[i] + beta2 * z[i]
+    }
+    }
+    

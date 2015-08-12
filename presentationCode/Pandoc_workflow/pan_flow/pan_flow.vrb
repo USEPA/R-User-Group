@@ -1,0 +1,25 @@
+\frametitle{Steps 4 - 6}
+\small
+After creating supporting documents in Project directory, final steps are completed by running `master.r'
+\begin{itemize}
+\item Step 4 - xls file imported using \texttt{gdata} package, implemented in `report.Rmd'
+\item Step 5 - HTML document created by converting `report.Rmd' with \texttt{knit2html} in `master.r'
+\item Step 6 - HTML document converted to Word with Pandoc by invoking system command
+\end{itemize}
+\begin{block}{master.r}
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcomment{# file to process}
+name <- \hlstring{"/my_data.xlsx"}
+
+\hlcomment{# rmd to html}
+\hlfunctioncall{knit2html}(\hlstring{"report.Rmd"})
+
+\hlcomment{# pandoc conversion of html to word doc}
+\hlfunctioncall{system}(\hlfunctioncall{paste0}(\hlstring{"pandoc -o report.docx report.html"}))
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\end{block}

@@ -1,0 +1,276 @@
+\documentclass[xcolor=svgnames]{beamer}
+\usetheme{Boadilla}
+\usecolortheme[named=SeaGreen]{structure}
+\usepackage{graphicx}
+\usepackage{breqn}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{verbatim}
+\usepackage{tikz}
+\usetikzlibrary{shadows,arrows,positioning}
+\definecolor{links}{HTML}{2A1B81}
+\hypersetup{colorlinks,linkcolor=links,urlcolor=links}
+\usepackage{pgfpages}
+
+\tikzstyle{block} = [rectangle, draw, text width=9em, text centered, rounded corners, minimum height=3em, minimum width=7em, top color = white, bottom color=brown!30,  drop shadow]
+
+\newcommand{\ShowSexpr}[1]{\texttt{{\char`\\}Sexpr\{#1\}}}
+
+\begin{document}
+
+\title[R with Microsoft]{A simple workflow for using R with Microsoft products}
+\author[M. Beck]{Marcus W. Beck}
+
+\institute[USEPA NHEERL]{USEPA NHEERL Gulf Ecology Division, Gulf Breeze, FL\\
+Email: \href{mailto:beck.marcus@epa.gov}{beck.marcus@epa.gov}, Phone: 850 934 2480}
+
+\date{May 21, 2014}
+
+%%%%%%
+\begin{frame}
+\vspace{-0.3in}
+\titlepage
+\end{frame}
+
+%%%%%%
+\begin{frame}{The problem...}
+\begin{itemize}
+\item R is great and has an increasing user base\\~\\
+\item RStudio is integrated with multiple document preparation systems \\~\\
+\item Output documents are not in a format that facilitates collaboration with 
+non R users, e.g., pdf, html \\~\\
+\item Data coming to you may be in a proprietary format, e.g., xls spreadsheet
+\end{itemize}
+\end{frame}
+
+%%%%%%
+\begin{frame}{The solution?}
+\begin{itemize}
+\item Solution one - Make liberal use of `projects' within RStudio \\~\\
+\item Solution two - Use \texttt{gdata} package to import excel data \\~\\
+\item Solution three - Get pandoc to convert document formats - \href{http://johnmacfarlane.net/pandoc/}{http://johnmacfarlane.net/pandoc/} \\~\\
+\end{itemize}
+\onslide<2->
+\large
+\centerline{\textit{Not recommended for simple tasks unless you really, really love R}}
+\end{frame}
+
+%%%%%
+\begin{frame}{An example workflow}
+\begin{itemize}
+\item I will present a workflow for integrating Microsoft products within RStudio as an approach to working with non R users \\~\\
+\item Idea is to never leave the RStudio environment - dynamic documents! \\~\\
+\item General workflow... \\~\\
+\end{itemize}
+\small
+\begin{center}
+\begin{tikzpicture}[node distance=2.5cm, auto, >=stealth]
+  \onslide<2->{
+	\node[block] (a) {1. Install necessary software and packages};}
+	\onslide<3->{
+	\node[block] (b)  [right of=a, node distance=4.2cm] {2. Create project in RStudio};
+ 	\draw[->] (a) -- (b);}
+ 	\onslide<4->{
+ 	\node[block] (c)  [right of=b, node distance=4.2cm]  {3. Setup supporting docs/functions};
+ 	\draw[->] (b) -- (c);}
+   \onslide<5->{
+   \node[block] (d)  [below of=a, node distance=2.5cm]  {4. Import with \texttt{gdata}, summarize};
+ 	\draw[->] (c) -- (d);}
+   \onslide<6->{
+   \node[block] (e)  [right of=d, node distance=4.2cm]  {5. Create HTML document using knitr Markdown};
+ 	\draw[->] (d) -- (e);}
+     \onslide<7->{
+   \node[block] (f)  [right of=e, node distance=4.2cm]  {6. Convert HTML doc to Word with Pandoc};
+   \draw[->] (e) -- (f);}
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+%%%%%%
+\begin{frame}[shrink]{The example}
+You are sent an Excel file of data to summarize and report but you love R and want to do everything in RStudio...
+<<echo = F, results = 'asis', message = F>>=
+library(gdata)
+library(xtable)
+
+prl_pth <- 'C:/strawberry/perl/bin/perl.exe'
+url <- 'http://beckmw.files.wordpress.com/2014/05/my_data.xlsx'
+dat <- read.xls(xls = url, sheet = 'Sheet1', perl = prl_pth)
+out.tab <- xtable(dat, digits=4)
+print.xtable(out.tab, type = 'latex', include.rownames = F, 
+  size = 'scriptsize')
+@
+\end{frame}
+
+%%%%%%
+\begin{frame}{Step 1}
+Install necessary software and Packages \\~\\
+\onslide<1->
+\begin{itemize}
+\onslide<2->
+\item R and RStudio (can do with other R editors)\\~\\
+\item Microsoft Office\\~\\
+\onslide<3->
+\item Strawberry Perl for using \texttt{gdata} package\\~\\
+\item Pandoc\\~\\
+\onslide<4->
+\item Packages: \texttt{gdata}, \texttt{knitr}, \texttt{utils}, \texttt{xtable}, others as needed...
+\end{itemize}
+\end{frame}
+
+%%%%%%
+\begin{frame}{Step 2}
+Create a project in RStudio \\~\\
+\begin{itemize}
+\item Create a folder or use existing on local machine \\~\\
+\item Add .Rprofile file to the folder for custom startup \\~\\
+\item Move all data you are working with to the folder \\~\\
+\item Literally create project in RStudio \\~\\
+\item Set options within RStudio \\~\\
+\end{itemize}
+\end{frame}
+
+%%%%%%
+\begin{frame}[fragile]{Step 3}
+Setup supporting docs/functions, i.e., .Rprofile, functions, report, master
+\scriptsize
+\begin{block}{.Rprofile}
+<<echo = T, eval = F, results = 'markup'>>=
+# library path
+.libPaths('C:\\Users\\mbeck\\R\\library')
+
+# startup message
+cat('My project...\n')
+
+# packages to use
+library(utils) # for system commands
+library(knitr) # for markdown
+library(gdata) # for import xls
+library(reshape2) # data format conversion
+library(xtable) # easy tables
+library(ggplot2) # plotting
+
+# perl path for gdata
+prl_pth <- 'C:/strawberry/perl/bin/perl.exe'
+
+# functions to use
+source('my_funcs.r')
+@
+\end{block}
+\end{frame}
+
+%%%%%%
+\begin{frame}[t, fragile]{Step 3}
+Setup supporting docs/functions, i.e., .Rprofile, functions, report, master
+\scriptsize
+\begin{block}{my\_funcs.r}
+<<echo = T, eval = F, results = 'markup'>>=
+######
+# functions for creating report,
+# created May 2014, M. Beck
+
+######
+# processes data for creating output in report,
+# 'dat_in' is input data as data frame,
+# output is data frame with converted variables
+proc_fun<-function(dat_in){
+  
+  # convert temp to C
+  dat_in$Temperature <- round((dat_in$Temperature - 32) * 5/9)
+  
+  #  convert data to long format
+  dat_in <- melt(dat_in, measure.vars = c('Restoration', 'Reference'))
+  
+  return(dat_in)
+  
+}
+
+######
+# creates linear model for data,
+# 'proc_dat' is processed data returned from 'proc_fun',
+# output is linear model object
+mod_fun <- function(proc_in) lm(value ~ variable + Year, dat = proc_in)
+@
+\end{block}
+\end{frame}
+
+%%%%%%
+\begin{frame}[fragile,shrink]{Step 3}
+Setup supporting docs/functions, i.e., .Rprofile, functions, report, master
+\scriptsize
+\begin{block}{report.Rmd}
+\begin{verbatim}
+======================
+Here's a report I made for `r gsub('/|.xlsx','',name)`
+----------------------
+
+```{r echo=F, include=F}  
+# import data
+url <- paste0('http://beckmw.files.wordpress.com/2014/05', name)
+dat <- read.xls(xls = url, sheet = 'Sheet1', perl = prl_pth)
+
+# process data for tables/figs
+dat <- proc_fun(dat)
+
+# model of data
+mod <- mod_fun(dat)
+```
+
+### Model summary
+```{r results='asis', echo=F}
+print.xtable(xtable(mod, digits = 2), type = 'html')
+```
+
+### Figure of restoration and reference by year
+```{r reg_fig, echo = F, fig.width = 5, fig.height = 3, dpi=200}
+ggplot(dat, aes(x = Year, y = value, colour = variable)) + 
+  geom_point() +
+  stat_smooth(method = 'lm')
+```
+\end{verbatim}
+\end{block}
+\end{frame}
+
+%%%%%%
+\begin{frame}[t, fragile]{Step 3}
+Setup supporting docs/functions, i.e., .Rprofile, functions, report, master
+\scriptsize
+\begin{block}{master.r}
+<<echo = T, eval = F, results = 'markup'>>=
+# file to process
+name <- '/my_data.xlsx'
+
+# rmd to html
+knit2html('report.Rmd')
+
+# pandoc conversion of html to word doc
+system(paste0('pandoc -o report.docx report.html'))
+@
+\end{block}
+\end{frame}
+
+%%%%%%
+\begin{frame}[fragile]{Steps 4 - 6}
+\small
+After creating supporting documents in Project directory, final steps are completed by running `master.r'
+\begin{itemize}
+\item Step 4 - xls file imported using \texttt{gdata} package, implemented in `report.Rmd'
+\item Step 5 - HTML document created by converting `report.Rmd' with \texttt{knit2html} in `master.r'
+\item Step 6 - HTML document converted to Word with Pandoc by invoking system command
+\end{itemize}
+\begin{block}{master.r}
+<<echo = T, eval = F, results = 'markup'>>=
+# file to process
+name <- '/my_data.xlsx'
+
+# rmd to html
+knit2html('report.Rmd')
+
+# pandoc conversion of html to word doc
+system(paste0('pandoc -o report.docx report.html'))
+@
+\end{block}
+\end{frame}
+
+
+\end{document}

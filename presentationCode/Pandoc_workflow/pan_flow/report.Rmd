@@ -1,0 +1,28 @@
+======================
+Here's a report I made for `r gsub('/|.xlsx','',name)`
+----------------------
+
+```{r echo=F, include=F}  
+# import data
+url <- paste0('http://beckmw.files.wordpress.com/2014/05', name)
+dat <- read.xls(xls = url, sheet = 'Sheet1', perl = prl_pth)
+
+# process data for tables/figs
+dat <- proc_fun(dat)
+
+# model of data
+mod <- mod_fun(dat)
+```
+
+### Model summary
+```{r results='asis', echo=F}
+print.xtable(xtable(mod, digits = 2), type = 'html')
+```
+
+### Figure of restoration and reference by year
+```{r reg_fig, echo = F, fig.width = 5, fig.height = 3, dpi=200}
+ggplot(dat, aes(x = Year, y = value, colour = variable)) + 
+  geom_point() +
+  stat_smooth(method = 'lm')
+```
+
