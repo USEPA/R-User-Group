@@ -5,7 +5,8 @@ How to contribute to R-User-Group
 
 * Submit an issue on [the Issues page](https://github.com/USEPA/R-User-Group/issues)
 
-### Code contributions
+### Contributions
+These instructions should work for any file type.
 
 * Fork this repo to your Github account
 * Clone your version on your account down to your machine from your account, e.g,. `git clone https://github.com/<yourgithubusername>/R-User-Group.git`
