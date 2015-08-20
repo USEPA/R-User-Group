@@ -1,0 +1,5 @@
+## README
+
+This directory is a self-contained folder that can be modified as an RStudio probject.
+
+Materials for presentation that describes the SWMPr package.  Please see the [SWMPr repository](https://github.com/fawda123/swmpr) for a full package description.  
