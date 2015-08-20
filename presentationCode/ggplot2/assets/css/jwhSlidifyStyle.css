@@ -1,0 +1,122 @@
+/*jwh Slidify Style Overrides: JW Hollister, March 2014*/
+/* All other styles and functions are from the io2012 framework*/
+
+/*Changes background color of full window*/
+body {
+  background: -webkit-linear-gradient(#356595,#4A5B63); /* For Safari 5.1 to 6.0 */
+  background: -o-linear-gradient(#356595,#4A5B63); /* For Opera 11.1 to 12.0 */
+  background: -moz-linear-gradient(#356595,#4A5B63); /* For Firefox 3.6 to 15 */
+  background: linear-gradient(#356595,#4A5B63); /* Standard syntax */
+}
+
+/* resize/center aside image on title for EPA seal */
+aside.gdbar img {
+  width: 85px;
+  margin-top: 6px;
+}
+
+/*Changes to title slide*/
+.title-slide {
+  background-color: rgba(0,0,0,0);
+}
+
+.title-slide hgroup h1 {
+  color: #559b6a;
+}
+
+/*Place to add logo to bottom of slide
+slides > slide.backdrop {
+  
+  
+}*/
+
+/*Slide Title*/
+slide:not(.segue) h2 {
+  color: #559B6A;
+}
+
+/*Slide Numbering */
+slides > slide:not(.nobackground):after {
+  color: #559B6A;
+  font-weight: bold;
+  bottom: -8;
+  right: 2;
+}
+
+/* Table Style */
+/* borders */
+table thead {
+  border-top: 1px solid #4a5b63;
+  border-bottom: 1px solid #4a5b63;
+}
+
+table td {
+  border-bottom: 1px solid #4a5b63;
+}
+
+/* Header Background and Font colors*/
+table th {
+  background: #4a5b63;
+  color: white;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Row Alternating Color eff3f4*/
+table tr:nth-child(2n+1) {
+  background: #b6b8ba;
+}
+
+/* Table Font */
+table tr > td:first-child {
+  font-weight: 600;
+  color: #4a5b63;
+}
+
+/* Font Color for .segue */
+.segue h2 {
+  /*color: #559B6A;*/
+  color: white;
+}
+
+/* segue positioning */
+.segue:not(.title-slide) hgroup {
+  position: absolute;
+  bottom: 300px;
+  left: 500px;
+}
+
+/*blockquote style*/
+
+blockquote {
+  background: #b6b8ba;
+  border-left: solid thick #4a5b63; 
+  padding: 15px 25px 1px 50px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 80%;
+  margin-bottom: 20px;
+}
+
+/* forces seqgue images to fill */
+
+.segue {
+  background-size: cover !important;
+}
+
+/* set default sizing on images */
+/* can override within html in markdown*/
+/*img:not(.flexbox.vcenter) {
+    max-height: 600px;
+    max-width: 1000px;
+    margin-top:-50px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}*/
+
+
+
+
+
+

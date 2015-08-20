@@ -1,0 +1,774 @@
+---
+title       : ggplot2 redux
+subtitle    : random things I like and other stuff
+author      : Marcus Beck
+logo        : epa-seal.png
+job         : ORISE post-doc
+framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : tomorrow      # 
+widgets     : []            # {mathjax, quiz, bootstrap}
+mode        : selfcontained # {standalone, draft}
+
+---
+
+```{r, echo = F, cache = F}
+# packages
+library(knitr)
+library(reshape2) 
+library(xtable) 
+library(ggplot2) 
+library(grid)
+library(slidify)
+library(slidifyLibraries)
+library(ggthemes)	
+library(ggmap)
+library(GGally)
+library(sna)
+library(network)
+
+# functions to use
+source('funcs.r')
+
+# knitr options
+opts_chunk$set(cache = F, fig.align = 'center') 
+```
+
+## To cover
+
+- facet_wrap, facet_grid
+- themes, preset and custom
+- ggmap
+- ggally
+
+What can you do w/ ggplot2 that you can't do w/ base functions?
+
+---
+
+## R Code Chunk Example
+
+- Facetting is one of the more powerful aspects of ggplot2
+
+- plot y vs x (or just x) by z, where z is some categorical variable
+
+- facet_grid or facet_wrap
+
+```{r eval=T}
+data(diamonds)
+head(diamonds)
+```
+
+---&twocol w1:50% w2:50%
+
+## Simple scatterplot 
+
+***=left
+```{r echo = T, eval = F}
+p1 <- ggplot(diamonds, aes(x = carat, 
+		y = price)) +
+	geom_point()
+p1
+```
+
+***=right
+
+```{r echo = F}
+p1 <- ggplot(diamonds, aes(x = carat, 
+		y = price)) +
+	geom_point()
+p1
+```
+
+---&twocol w1:50% w2:50%
+
+## Simple scatterplot with facet_wrap
+
+***=left
+
+```{r echo = T, eval = F}
+p1 + facet_wrap(~color)
+```
+
+A simple scatterplot of diamond price by carat, <code>facet_wrap</code> by color
+
+***=right
+
+```{r echo = F, eval = T}
+p1 + facet_wrap(~color)
+```
+
+---&twocol w1:50% w2:50%
+
+## Simple scatterplot with facet_grid
+
+***=left
+
+```{r echo = T, eval = F}
+p1 + facet_grid(~color)
+```
+
+A simple scatterplot of diamond price by carat, <code>facet_grid</code> by color
+
+What's the difference?
+
+***=right
+
+```{r echo = F, eval = T}
+p1 + facet_grid(~color)
+```
+
+---
+
+## facet_wrap vs facet_grid
+
+- more important for multiple facet variables
+- <code>facet_wrap</code> always has one horizontal facet label on the top
+
+```{r fig.align = 'center', fig.height = 5, fig.width = 13}
+p1 + facet_wrap(~ cut + color)
+```
+
+---
+
+## facet_wrap vs facet_grid
+
+- more important for multiple facet variables
+- <code>facet_grid</code> can have both horizontal, vertical facet labels
+
+```{r fig.align = 'center', fig.height = 5, fig.width = 13}
+p1 + facet_grid(cut ~ color)
+```
+
+---
+
+## facet_wrap vs facet_grid
+
+- order of variables affects position of facets
+- <code>facet_wrap</code> orders facets by position in the call
+
+```{r fig.align = 'center', fig.height = 5, fig.width = 13}
+p1 + facet_wrap(~ color + cut) # same as facet_wrap(color ~ cut)
+```
+
+---
+
+## facet_wrap vs facet_grid
+
+- order of variables affects position of facets
+- <code>facet_wrap</code> orders facets by position in the call
+
+```{r fig.align = 'center', fig.height = 5, fig.width = 13}
+p1 + facet_wrap(~ cut + color) # same as facet_wrap(cut ~ color)
+```
+
+---
+
+## facet_wrap vs facet_grid
+
+- order of variables affects position of facets
+- <code>facet_grid</code> orders vertical/horizontal facets by left/right of tilde
+
+```{r fig.align = 'center', fig.height = 5, fig.width = 13}
+p1 + facet_grid(cut ~ color) # not the same as facet_grid(~ cut + color)
+```
+
+---
+
+## facet_wrap vs facet_grid
+
+- order of variables affects position of facets
+- <code>facet_grid</code> orders vertical/horizontal facets by left/right of tilde
+
+```{r fig.align = 'center', fig.height = 5, fig.width = 13}
+p1 + facet_grid(color ~ cut) # not the same as facet_grid(~ color + cut)
+```
+
+---
+
+## facet_wrap vs facet_grid
+
+- both use the <code>scales</code> argument for axes, otherwise fixed
+
+```{r fig.align = 'center', fig.height = 5, fig.width = 13}
+p1 + facet_wrap(~ color + cut, scales = 'free') # or 'free_x', 'free_y' 
+```
+
+---
+
+## facet_wrap vs facet_grid
+
+- <code>facet_grid</code> treats <code>scales</code> differently
+
+```{r fig.align = 'center', fig.height = 5, fig.width = 13}
+p1 + facet_grid(color ~ cut, scales = 'free') # or 'free_x', 'free_y' 
+```
+
+
+---
+
+## facet_wrap vs facet_grid
+
+- <code>facet_wrap</code> uses the <code>ncol</code> argument
+
+```{r fig.align = 'center', fig.height = 5, fig.width = 13}
+p1 + facet_wrap(~ color + cut, ncol = 7)
+```
+
+---
+
+## facet_wrap vs facet_grid
+
+- <code>facet_grid</code> always creates a symmetrical plot
+
+```{r fig.align = 'center', fig.height = 5, fig.width = 13}
+p1 + facet_grid(~ color + cut)
+```
+
+---
+
+## A huge advantage of facets...
+
+- Very easy to quickly evaluate a variable by multiple categories
+- Adding some fake variables to diamonds...
+```{r}
+diamonds$fake1 <- sample(c('A', 'B'), nrow(diamonds), replace = T)
+diamonds$fake2 <- sample(c('C', 'D'), nrow(diamonds), replace = T)
+diamonds$fake3 <- sample(c('E', 'F'), nrow(diamonds), replace = T)
+diamonds$fake4 <- sample(c('G', 'H'), nrow(diamonds), replace = T)
+head(diamonds[, grep('fake', names(diamonds))])
+```
+
+```{r echo = F}
+p1 <- ggplot(diamonds, aes(x = carat, y = price)) + geom_point()
+```
+
+---
+
+## A huge advantage of facets...
+
+```{r fig.align = 'center', fig.height = 5, fig.width = 13}
+p1 + facet_grid(fake1 + fake2 ~ fake3 + fake4)
+```
+
+---
+
+## Facet summary
+
+<code>facet_wrap</code> and <code>facet_grid</code> accomplish similar tasks, with slight differences
+
+<code>facet_wrap</code>
+- only horizontal facet labels
+- not symmetric, uses <code>ncol</code>
+- scales affect all facets
+
+<code>facet_grid</code>
+- horizontal/vertical facet labels
+- always symmetric
+- scales only affect outer facets 
+
+ - Not apparent why you would use one over the other...
+
+---&twocol w1:50% w2:50%
+
+## Themes
+
+***=left
+
+- ggplot2 creates plots with a given theme, default is <code>theme_grey()</code>
+
+```{r fig.align = 'center', fig.height = 6, fig.width = 6, eval = F}
+data(iris)
+p2 <- ggplot(iris, aes(x = Sepal.Length, 
+		y = Sepal.Width, 
+		colour = Species)) +
+	geom_point()
+p2
+```
+
+***=right
+
+```{r fig.align = 'center', fig.height = 6, fig.width = 6, echo = F}
+data(iris)
+p2 <- ggplot(iris, aes(x = Sepal.Length, 
+		y = Sepal.Width, colour = Species)) +
+	geom_point(size = 4)
+p2
+```
+
+---&twocol w1:50% w2:50%
+
+## Themes
+
+***=left
+
+- Other pre-loaded themes are <code>theme_bw()</code> and...
+
+```{r fig.align = 'center', fig.height = 6, fig.width = 6, eval = F}
+p2 + theme_bw()	
+```
+
+***=right
+
+```{r fig.align = 'center', fig.height = 6, fig.width = 6, echo = F}
+p2 + theme_bw()	
+```
+
+---&twocol w1:50% w2:50%
+
+## Themes
+
+***=left
+
+- <code>theme_classic()</code>
+
+```{r fig.align = 'center', fig.height = 6, fig.width = 6, eval = F}
+p2 + theme_classic()	
+```
+
+***=right
+
+```{r fig.align = 'center', fig.height = 6, fig.width = 6, echo = F}
+p2 + theme_classic()	
+```
+
+---
+
+## Themes
+
+- Themes are simply complete calls to the <code>ggplot2::theme</code> function
+- A custom theme is easily made
+
+```{r}
+ugly_theme <- theme(
+	panel.background = element_rect(fill = "green"), 
+	axis.line = element_line(size = 3, colour = "red", linetype = "dotted"),
+	axis.text = element_text(colour = "blue"),
+	axis.ticks.length = unit(.85, "cm")
+	)
+```
+
+- Complete list of theme options <a href = http://docs.ggplot2.org/current/theme.html>here</a>
+
+---&twocol w1:50% w2:50%
+
+## Themes
+
+***=left
+
+- Great success!
+
+```{r fig.width = 6, fig.height = 6, eval = F}
+p2 + ugly_theme
+```
+
+***=right
+
+```{r fig.width = 6, fig.height = 6, echo = F, cache = F}
+p2 + ugly_theme
+```
+
+---
+
+## Themes
+
+- The user-defined theme can also be set as default by updating an existing theme
+
+```{r eval = F}
+ugly_default <- function(){
+	theme_grey() %+replace%
+	theme(
+		panel.background = element_rect(fill = "green"), 
+		axis.line = element_line(size = 3, colour = "red", linetype = "dotted"),
+		axis.text = element_text(colour = "blue"),
+		axis.ticks.length = unit(.85, "cm")
+		)
+	}
+theme_set(ugly_default())
+
+p2
+```
+
+```{r echo = F}
+theme_set(theme_grey())
+```
+
+---
+
+## Themes
+
+- The ggthemes library provides additional themes
+
+```{r eval = F}
+library(devtools)
+install_github('ggthemes', username = 'jrnold')
+library(ggthemes)	
+```
+
+- Check the <a href = https://github.com/jrnold/ggthemes>repo</a> on Github for more info
+
+---&twocol w1:50% w2:50%
+
+## Themes
+
+***=left
+
+- The ggthemes library provides additional themes
+- Wall Street Journal theme
+
+```{r fig.width = 6, fig.height = 6, eval = F}
+p2 + theme_wsj()
+```
+
+***=right
+
+```{r fig.width = 6, fig.height = 6, echo = F}
+p2 + theme_wsj()
+```
+
+---&twocol w1:50% w2:50%
+
+## Themes
+
+***=left
+
+- The ggthemes library provides additional themes
+- Google docs theme
+
+```{r fig.width = 6, fig.height = 6, eval = F}
+p2 + theme_gdocs()
+```
+
+***=right
+
+```{r fig.width = 6, fig.height = 6, echo = F}
+p2 + theme_gdocs()
+```
+
+---&twocol w1:50% w2:50%
+
+## Themes
+
+***=left
+
+- The ggthemes library provides additional themes
+- Even this old school Excel theme...
+
+```{r fig.width = 6, fig.height = 6, eval = F}
+p2 + theme_excel()
+```
+
+***=right
+
+```{r fig.width = 6, fig.height = 6, echo = F}
+p2 + theme_excel()
+```
+
+---
+
+## Easy mapping with ggmap
+
+
+<q><font size="6">The basic idea of ggmap is to take a downloaded map image, plot it as a context layer using ggplot2, and then plot additional content layers of data, statistics, or models on top of the map.</font></q>
+
+<div align="right"><a href = "http://journal.r-project.org/archive/2013-1/kahle-wickham.pdf">Kahle and Wickham 2011</a></div>
+
+---
+
+## Easy mapping with ggmap
+
+- install/load ggmap
+- download the images and format for plotting, done with <code>get_map</code>
+
+```{r eval = F}
+install.packages('ggmap')
+library(ggmap)
+
+# get map by location
+loc <- 'Environmental Protection Agency, 1 Sabine Drive, Gulf Breeze, FL'
+my_map <- get_map(
+	location = loc, 
+	source = 'google', 
+	maptype = 'terrain', 
+	zoom = 13
+	)
+```
+
+```{r echo = F, message = F, results = 'hide', fig.align = 'center', fig.height=5}
+library(ggmap)
+
+# location
+loc <- 'Environmental Protection Agency, 1 Sabine Drive, Gulf Breeze, FL'
+# coordinates
+my_map <- get_map(
+	location = loc, 
+	source = 'google', 
+	maptype = 'terrain', 
+	zoom = 13
+	)
+```
+
+---&twocol w1:50% w2:50%
+
+## Easy mapping with ggmap
+
+***=left
+
+- plot with <code>ggmap</code>
+
+```{r eval = F}
+ggmap(my_map, extent = 'panel')
+```
+
+***=right
+
+```{r echo = F, fig.align = 'center', fig.height=7,  cache = F}
+ggmap(my_map, extent = 'panel')
+```
+
+---&twocol w1:50% w2:50%
+
+## Easy mapping with ggmap
+
+***=left
+
+- Now add some regular ggplot2 content layers
+
+```{r eval = F}
+pts <- data.frame(
+	lon = c(-87.1930, -87.2050, -87.1571),
+	lat = c(30.3473, 30.3406, 30.3380),
+	lab = c('Site 1', 'Site 2', 'Home')
+	)
+ggmap(my_map, extent = 'panel',
+	base_layer = ggplot(pts, 
+			aes(x = lon, y = lat))) +
+		geom_text(aes(label = lab))
+```
+
+***=right
+
+```{r echo = F, fig.align = 'center', fig.height=7}
+pts <- data.frame(
+	lon = c(-87.1930, -87.2050, -87.1571),
+	lat = c(30.3473, 30.3406, 30.3380),
+	lab = c('Site 1', 'Site 2', 'Home')
+	)
+ggmap(my_map, extent = 'panel',
+	base_layer = ggplot(pts, 
+			aes(x = lon, y = lat))) +
+		geom_text(aes(label = lab))
+```
+
+---&twocol w1:50% w2:50%
+
+## Easy mapping with ggmap
+
+***=left
+
+- Additional map types
+- See <a href = http://cran.r-project.org/web/packages/ggmap/ggmap.pdf>documentation</a> for full list of options
+
+```{r eval = F}
+my_map <- get_map(
+	location = loc, 
+	source = 'google', 
+	maptype = 'satellite', 
+	zoom = 13
+	)
+ggmap(my_map, extent = 'panel')
+```
+
+***=right
+
+```{r echo = F, fig.align = 'center', fig.height=7,  message = F, results = 'hide'}
+my_map <- get_map(
+	location = loc, 
+	source = 'google', 
+	maptype = 'satellite', 
+	zoom = 13
+	)
+ggmap(my_map, extent = 'panel')
+```
+
+---&twocol w1:50% w2:50%
+
+## GGally
+
+***=left
+
+- A helper to ggplot2... contains templates for different plots to be combined into a plot matrix, a parallel coordinate plot function, as well as a function for making a network plot, on <a href = http://cran.r-project.org/web/packages/GGally/GGally.pdf>CRAN</a>
+- The <a href=http://vita.had.co.nz/papers/gpp.pdf>generalized pairs plot</a> is a plot matrix that builds on the standard pairs plot
+
+```{r eval = F}
+data(tips, package = "reshape2")
+pairs(tips[, 1:4])
+```
+
+***=right
+
+```{r echo = F, fig.align = 'center', fig.height = 7}
+data(tips, package = "reshape2")
+pairs(tips[, 1:4])
+```
+
+---&twocol w1:50% w2:50%
+
+## GGally
+
+***=left
+
+- Pairs plots are inadequate for exploratory analysis of variables that are a mix of quantitative and categorical information
+- ggpairs provides a plot matrix of mosaic tiles that describe data of different categories using a ggplot2 framework
+
+```{r eval = F}
+install.packages('GGally')
+ggpairs(tips[, 1:4])
+```
+
+***=right
+
+```{r echo = F, results = 'hide'}
+library(GGally)
+ggpairs(tips[, 1:4])
+```
+
+---&twocol w1:50% w2:50%
+
+## GGally
+
+***=left
+
+- Information above/below diagonal is not redundant
+- quantitative-quantitative: scatterplot
+- quantitative-categorical: boxplots
+- categorical-categorical: conditional barplots
+
+```{r eval = F}
+install.packages('GGally')
+ggpairs(tips[, 1:4])
+```
+
+***=right
+
+```{r echo = F, results = 'hide'}
+library(GGally)
+ggpairs(tips[, 1:4])
+```
+
+---&twocol w1:50% w2:50%
+
+## GGally
+
+***=left
+
+- Defaults can be customized
+
+```{r eval = F}
+install.packages('GGally')
+ggpairs(
+  tips[,1:4],
+  upper = list(continuous = "density", 
+  	combo = "box"),
+  lower = list(continuous = "points", 
+  	combo = "dot")
+	)
+```
+
+***=right
+
+```{r echo = F, results = 'hide'}
+ggpairs(
+  tips[,1:4],
+  upper = list(continuous = "density", 
+  	combo = "box"),
+  lower = list(continuous = "points", 
+  	combo = "dot")
+	)
+```
+
+---&twocol w1:50% w2:50%
+
+## GGally
+
+***=left
+
+- Other plots... static parallel coordinate plots.
+
+```{r eval = F}
+ggparcoord(data = iris, columns = 1:4, 
+	groupColumn = 5, 
+	order = "anyClass")
+```
+
+***=right
+
+```{r echo = F, fig.align = 'center', fig.height = 7}
+ggparcoord(data = iris, columns = 1:4, 
+	groupColumn = 5, 
+	order = "anyClass")
+```
+
+---&twocol w1:50% w2:50%
+
+## GGally
+
+***=left
+
+- Other plots... network plots.
+
+```{r eval = F}
+library(sna)
+
+url = url("http://networkdata.ics.uci.edu/
+	netdata/data/cities.RData")
+print(load(url)); close(url)
+# plot cities, firms and law firms
+type = cities %v% "type"
+type = ifelse(grepl("City|Law", type), 
+	gsub("I+", "", type), "Firm")
+ggnet(cities, mode = "kamadakawai", 
+	alpha = .5, node.group = type, 
+	label.nodes = c("Paris", "Beijing", 
+		"Chicago"), 
+	color = "darkred")
+```
+
+***=right
+
+```{r echo = F, message = F, fig.align = 'center', fig.height = 7, warning = F, comment = F, results = 'hide'}
+library(sna)
+
+url = url("http://networkdata.ics.uci.edu/
+	netdata/data/cities.RData")
+print(load(url)); close(url)
+# plot cities, firms and law firms
+type = cities %v% "type"
+type = ifelse(grepl("City|Law", type), 
+	gsub("I+", "", type), "Firm")
+ggnet(cities, mode = "kamadakawai", 
+	alpha = .5, node.group = type, 
+	label.nodes = c("Paris", "Beijing", 
+		"Chicago"), 
+	color = "darkred")
+```
+
+---
+
+## What does ggplot2 offer that isn't in base?
+
+- Many geoms
+```{r}
+ls(pattern = '^geom_', env = as.environment('package:ggplot2'))
+```
+
+---
+
+## What does ggplot2 offer that isn't in base?
+
+- Easy facetting, pre-loaded and customized themes, spatial data, pairs plots...
+
+- See online <a href = http://ggplot2.org/>documentation</a> for additional functionality
+
+- Presentation materials available <a href = https://github.com/fawda123/ggpres_102>here</a>
+
+- EPA, NHEERL slidify template from Jeff's <a href = https://github.com/jhollist/jwhSlidifyStyle>repo</a>

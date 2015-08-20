@@ -1,0 +1,26 @@
+\frametitle{How are data \Bigtxt {analyzed}?}
+Some examples... estimate metabolism with \texttt{ecometab}
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.929, 0.973, 0.984}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{> }\hlcom{## import water quality and weather data, combine}
+\hlstd{> }\hlstd{wq} \hlkwb{<-} \hlkwd{import_remote}\hlstd{(}\hlstr{'apebbwq'}\hlstd{)}
+\hlstd{> }\hlstd{met} \hlkwb{<-} \hlkwd{import_remote}\hlstd{(}\hlstr{'apaebmet'}\hlstd{)}
+\hlstd{> }\hlstd{dat} \hlkwb{<-} \hlkwd{comb}\hlstd{(wq, met)}
+\hlstd{> }
+\hlstd{> }\hlcom{## metabolism, plot}
+\hlstd{> }\hlstd{res} \hlkwb{<-} \hlkwd{ecometab}\hlstd{(dat,} \hlkwc{metab_units} \hlstd{=} \hlstr{'grams'}\hlstd{)}
+\hlstd{> }\hlkwd{plot_metab}\hlstd{(res,} \hlkwc{by} \hlstd{=} \hlstr{'months'}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.929, 0.973, 0.984}\color{fgcolor}
+
+{\centering \includegraphics[width=0.95\textwidth]{fig//ecometab}
+
+}
+
+
+
+\end{knitrout}

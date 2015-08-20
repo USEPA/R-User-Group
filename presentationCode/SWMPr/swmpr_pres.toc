@@ -1,0 +1,6 @@
+\beamer@endinputifotherversion {3.27pt}
+\beamer@sectionintoc {1}{Background}{2}{0}{1}
+\beamer@sectionintoc {2}{Motivation}{3}{0}{2}
+\beamer@sectionintoc {3}{Package development}{10}{0}{3}
+\beamer@sectionintoc {4}{SWMPr applications}{30}{0}{4}
+\beamer@sectionintoc {5}{Conclusions}{33}{0}{5}
