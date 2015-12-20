@@ -1,21 +1,22 @@
 # VARIOUS ATTEMPTS TO PLOT HARSHA BATHYMETRY
 
 # LIBRARY------------
-library(marmap)
-library(rgdal)
+library(marmap)  # Used for working with bathymetry data
+library(rgdal)  # Use for reading shapefile
 
 # GET DATA----------
-# ODNR data
-depths.odnr <- readOGR(dsn = "inputData/ODNRdata",  # ODNR data has better coverage than USGS
+# ODNR bathymteric survey of Harsha Lake 
+depths.odnr <- readOGR(dsn = "contributedCode/bathymetry/inputData/ODNRdata",  # ODNR data has better coverage than USGS
                   layer = "EastFork_depths")
 
-depths.usgs <- read.table(file="inputData/USGSdata/Harsha_Bathymetry.txt", 
-                      sep = ",", header = TRUE)
+# USGS data.  Coverage is poor relative to ODNR data.  Data not pushed to repository
+# depths.usgs <- read.table(file="inputData/USGSdata/Harsha_Bathymetry.txt", 
+#                       sep = ",", header = TRUE)
 
 
 # Inspect data
-plot(depths.dnr)  # looks good
-str(depths@data)
+plot(depths.odnr)  # looks good
+str(depths.odnr@data)
 depths.df <- (cbind(depths.odnr@data[1], depths.odnr@data[2], depths.odnr@data[3]))  # convert to dataframe
 head(depths.df)  # inspect
 sum(duplicated(depths.df[,1:2]))  # Have some duplicate depth measurements.  Aggregate them away
