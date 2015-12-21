@@ -1,0 +1,84 @@
+% Copyright 2007 by Till Tantau
+%
+% This file may be distributed and/or modified
+%
+% 1. under the LaTeX Project Public License and/or
+% 2. under the GNU Public License.
+%
+% See the file doc/licenses/LICENSE for more details.
+
+\ProvidesPackageRCS $Header: /Users/joseph/Documents/LaTeX/beamer/base/themes/color/beamercolorthemeEPA.sty,v d02a7cf4d8ae 2010/06/17 09:11:41 rivanvx $
+
+
+\mode<presentation>
+% Here, we are using "rgb" in small case and this notation for decimal values of "rgb" ranging from 0 to 1
+
+% To specify the integer values of "RGB", ranging from 0 t0 255, we need to use the "RGB" in CAPS or UPPERCASE
+% Also, the first curly braces include the name that we assign to the colour combination
+
+%The following are from EPA product guidance
+\definecolor{Sig660}{RGB}{0,112,185}
+\definecolor{Sig362}{RGB}{38,161,70}
+\definecolor{App298}{RGB}{14,188,238}
+\definecolor{App632}{RGB}{0,163,202}
+\definecolor{App5483}{RGB}{68,143,156}
+\definecolor{App2955}{RGB}{0,63,105}
+\definecolor{App569}{RGB}{0,142,134}
+\definecolor{App349}{RGB}{0,103,62}
+\definecolor{App383}{RGB}{169,181,51}
+\definecolor{App584}{RGB}{220,226,105}
+\definecolor{App619}{RGB}{157,142,62}
+\definecolor{AppWarmGrey5}{RGB}{191,182,172}
+\definecolor{App458}{RGB}{234,213,125}
+\definecolor{App127}{RGB}{255,234,136}
+\definecolor{App7407}{RGB}{224,163,95}
+\definecolor{App2617}{RGB}{75,38,130}
+\definecolor{Acc7413}{RGB}{235,123,40}
+\definecolor{Acc731}{RGB}{108,56,0}
+\definecolor{Acc187}{RGB}{196,18,48}
+
+\setbeamercolor*{normal text}{fg=black}
+\setbeamercolor*{example text}{fg=Sig362}
+\setbeamercolor*{structure}{fg=black}
+
+
+\providecommand*{\beamer@bftext@only}{%
+  \relax
+  \ifmmode
+    \expandafter\beamer@bftext@warning
+  \else
+    \expandafter\bfseries
+  \fi
+}
+\providecommand*{\beamer@bftext@warning}{%
+  \ClassWarning{beamer}
+    {Cannot use bold for alerted text in math mode}%
+}
+
+\setbeamercolor{palette primary}{fg=black}
+\setbeamercolor{palette secondary}{fg=black}%Sig660!70!white}
+\setbeamercolor{palette tertiary}{fg=Sig362}
+\setbeamercolor{palette quaternary}{fg=Sig660}
+
+\setbeamercolor{sidebar}{bg=black!20}
+
+\setbeamercolor{palette sidebar primary}{fg=black}
+\setbeamercolor{palette sidebar secondary}{fg=black}
+\setbeamercolor{palette sidebar tertiary}{fg=black}
+\setbeamercolor{palette sidebar quaternary}{fg=black}
+
+\setbeamercolor{item projected}{fg=black,bg=black!20}
+
+\setbeamercolor*{block body}{}
+\setbeamercolor*{block body alerted}{}
+\setbeamercolor*{block body example}{}
+\setbeamercolor*{block title}{parent=structure}
+\setbeamercolor*{block title alerted}{parent=alerted text}
+\setbeamercolor*{block title example}{parent=example text}
+
+\setbeamercolor*{titlelike}{parent=structure}
+
+\setbeamercolor{colorbox test}{fg=black,bg=red}
+
+\mode
+<all>

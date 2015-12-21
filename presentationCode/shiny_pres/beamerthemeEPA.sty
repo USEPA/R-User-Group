@@ -1,0 +1,56 @@
+% Copyright 2007 by Till Tantau
+%
+% This file may be distributed and/or modified
+%
+% 1. under the LaTeX Project Public License and/or
+% 2. under the GNU Public License.
+%
+% See the file doc/licenses/LICENSE for more details.
+
+%\ProvidesPackageRCS $Header: /Users/joseph/Documents/LaTeX/beamer/base/themes/theme/beamerthemeEPA.sty,v d02a7cf4d8ae 2010/06/17 09:11:41 rivanvx $
+
+
+\mode<presentation>
+
+\usefonttheme{EPA}
+\usecolortheme{EPA}
+\useinnertheme{EPA}
+\useoutertheme{EPA}
+
+%Set up the Banner with EPA logo
+\usepackage{tikz}
+\usetikzlibrary{fadings,shadows,shapes.geometric}
+\usepackage[skins]{tcolorbox}
+\usetikzlibrary{shadows}
+\usetikzlibrary{shapes.geometric}
+\tikzset{
+  ashadow/.style={opacity=.15, shadow xshift=0.02, shadow yshift=-0.07,scale=1.25}
+  }
+\tikzset{
+  leftframebanner/.pic={
+  code={
+    
+    %draw the left banner background needed because next command doesn't provide fill
+    \filldraw[fill=white,draw=white,draw opacity=0.5,drop shadow={ashadow, color=white!20!black}] 
+      (0,0) -- (0.225\paperwidth,0) -- (0.317\paperwidth,-0.1333\paperheight) --(0,-0.1333\paperheight) -- cycle;
+    %draw the left banner with epa logo image
+    \path[fill plain
+      image*={width=0.15\paperwidth}{EPA_logo_green.png}]
+      (0.05,0) --(0.225\paperwidth,0) -- (0.225\paperwidth,-0.1333\paperheight) --(0.05,-0.1333\paperheight) -- cycle;
+      }
+    },
+  rightframebanner/.pic={
+    code={
+    
+      %draw the frametitle banner on right
+      \filldraw[fill=white,draw=white,drop shadow={ashadow, color=white!20!black}]
+        (0.25\paperwidth,0) -- (\paperwidth,0) -- (\paperwidth,-0.1333\paperheight) --(0.342\paperwidth,-0.1333\paperheight) -- cycle;
+      %add frametitle text node
+      \draw (0.372\paperwidth,-0.0671\paperheight) node[anchor=west, text width=0.6\paperwidth]{\insertframetitle};
+      }
+    }
+  }
+
+
+\mode
+<all>
