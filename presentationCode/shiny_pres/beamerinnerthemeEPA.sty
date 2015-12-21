@@ -1,0 +1,54 @@
+% Copyright 2007 by Till Tantau
+%
+% This file may be distributed and/or modified
+%
+% 1. under the LaTeX Project Public License and/or
+% 2. under the GNU Public License.
+%
+% See the file doc/licenses/LICENSE for more details.
+
+\ProvidesPackageRCS $Header: /Users/joseph/Documents/LaTeX/beamer/base/themes/inner/beamerinnerthemeEPA.sty,v 65cb471f9634 2013/10/15 06:36:03 joseph $
+
+
+\mode<presentation>
+
+\useinnertheme{default}
+
+% Instead of rounded circles, we will use triangles as the indicator for items.
+\setbeamertemplate{itemize items}[circle]
+
+% The default option for enumerate environment removes the circles around the numbers provided by the "rounded" inner theme. Just simple numbers remain.
+%\setbeamertemplate{enumerate items}[default]
+%\usebackgroundtemplate{\includegraphics[width=\paperwidth,height=\paperheight]{pptBackground3.jpg}}
+
+\usepackage{tikz}
+\usetikzlibrary{calc,fadings}
+\tikzfading[name=fade l,left color=transparent!100,right color=transparent!0]
+\tikzfading[name=fade r,right color=transparent!100,left color=transparent!0]
+\tikzfading[name=fade d,bottom color=transparent!100,top color=transparent!0]
+\tikzfading[name=fade u,top color=transparent!100,bottom color=transparent!0]
+
+% this "frames" a rectangle node
+\newcommand\framenode[2][10pt]{
+    \draw[fill=black!2!white] (0,0) rectangle (\paperwidth,\paperheight);
+    \fill[black!20!white,path fading=fade d] (0,\paperheight) rectangle (\paperwidth,0.85\paperheight);
+    \fill[black!20!white,path fading=fade u] (0,0) rectangle (\paperwidth,0.15\paperheight);
+    \fill[black!20!white,path fading=fade l] (\paperwidth,0) rectangle (0.85\paperwidth,\paperheight);
+    \fill[black!20!white,path fading=fade r] (0,0) rectangle (0.15\paperwidth,\paperheight);
+}
+
+\usebackgroundtemplate{
+ \begin{tikzpicture}
+ 
+  \node[anchor=south west,inner sep=0] (frame) at (0,0) {};
+\framenode[15pt]{frame}
+
+ \end{tikzpicture}
+
+}
+
+
+
+
+\mode
+<all>
