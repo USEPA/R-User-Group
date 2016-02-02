@@ -1,0 +1,58 @@
+---
+title: "R setup tests"
+author: "Terry N. Brown"
+date: "Tuesday, February 02, 2016"
+output: pdf_document
+---
+
+# Basic output
+
+Simple echoed command with output
+
+```{r}
+summary(cars)
+```
+
+## Plots
+
+Plot output
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Equations with LaTeX inline $E = mc^2$ and displayed $$I = \sum{\frac{P\times V}{1}}$$
+
+Equation with MathML <math><mrow>
+      <mi>a</mi> <mo>&InvisibleTimes;</mo> <msup><mi>x</mi><mn>2</mn></msup>
+      <mo>+</mo><mi>b</mi><mo>&InvisibleTimes;</mo><mi>x</mi>
+      <mo>+</mo><mi>c</mi>
+    </mrow></math>
+
+## Images
+
+Image test ![Test image](./Test_card.png)
+
+## Tables
+
+``knitr kable()`` function:
+
+```{r kable, echo=FALSE}
+library(knitr)
+kable(summary(cars))
+```
+
+``pander``:
+
+```{r pander, echo=FALSE}
+library(pander)
+pander(summary(cars))
+```
+
+``xtable`` (doesn't translate to Word because it uses raw HTML not markdown):
+
+```{r xtable, echo=FALSE, results='asis'}
+library(xtable)
+options(xtable.type='html')
+print(xtable(summary(cars)))
+```

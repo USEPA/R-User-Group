@@ -1,0 +1,88 @@
+% ---
+% title: "R setup tests"
+% author: "Terry N. Brown"
+% date: "Tuesday, February 02, 2016"
+% ---
+
+
+\documentclass[11pt]{article}
+
+\usepackage[letterpaper,margin=1in]{geometry}
+\usepackage{natbib}
+\bibliographystyle{apalike}
+
+% \usepackage{times}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+\title{Multiple approaches to multi-scale watersheds and shoreline contributing areas.}
+\date{\today}
+\author{Terry N. Brown \and Tom P. Hollenhorst}
+\maketitle
+
+
+\section{Basic output}
+
+Simple echoed command with output
+
+<<>>=
+summary(cars)
+@
+
+\section{Plots}
+
+Plot output
+
+<<>>=
+plot(cars)
+@
+
+Equations with LaTeX inline $E = mc^2$ and displayed
+
+$$I = \sum{\frac{P\times V}{1}}$$
+
+\[ I =  \sum{\frac{P\times V}{1}} \]
+
+Equation with MathML (wouldn't expect this to work in \LaTeX)
+
+   <math><mrow>
+      <mi>a</mi> <mo>&InvisibleTimes;</mo> <msup><mi>x</mi><mn>2</mn></msup>
+      <mo>+</mo><mi>b</mi><mo>&InvisibleTimes;</mo><mi>x</mi>
+      <mo>+</mo><mi>c</mi>
+    </mrow></math>
+
+\section{Images}
+
+\begin{figure}[ht]\centering
+\includegraphics[width=5in]{../markdown/Test_card.png}
+\caption{Test image caption.}
+\label{f_test_img}
+\end{figure}
+
+
+\section{Tables}
+
+``knitr kable()`` function:
+
+<<>>=
+library(knitr)
+kable(summary(cars))
+@
+
+``pander``:
+
+<<>>=
+library(pander)
+pander(summary(cars))
+@
+
+``xtable``:
+
+<<>>=
+library(xtable)
+options(xtable.type='html')
+print(xtable(summary(cars)))
+@
+
+\end{document}
