@@ -2,12 +2,12 @@
 title: "R setup tests"
 author: "Terry N. Brown"
 date: "Tuesday, February 02, 2016"
-output: pdf_document
+output: html_document
 ---
 
 # Basic output
 
-Simple echoed command with output
+Simple inline 3 x 11 = `r 3*11` and echoed block command with output
 
 ```{r}
 summary(cars)
