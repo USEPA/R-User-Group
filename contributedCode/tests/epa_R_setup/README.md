@@ -1,6 +1,3 @@
----
-output: word_document
----
 Test materials to check that the items listed below are working
 in your R install.
 
