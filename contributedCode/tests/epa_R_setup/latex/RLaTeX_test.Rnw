@@ -4,85 +4,116 @@
 % date: "Tuesday, February 02, 2016"
 % ---
 
-
 \documentclass[11pt]{article}
 
 \usepackage[letterpaper,margin=1in]{geometry}
 \usepackage{natbib}
 \bibliographystyle{apalike}
 
-% \usepackage{times}
+\usepackage{mathptmx}
+\usepackage[scaled=.90]{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{courier}
+
+\usepackage{hyperref}
+\usepackage{xcolor}
+\hypersetup{
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+
+\usepackage{float}
 
 \begin{document}
-\SweaveOpts{concordance=TRUE}
 
-\title{Multiple approaches to multi-scale watersheds and shoreline contributing areas.}
-\date{\today}
-\author{Terry N. Brown \and Tom P. Hollenhorst}
+\title{Test functionality of R-Studio / MikTex install.}
+\date{Mon Feb 08 2016}
+\author{Terry N. Brown}
 \maketitle
 
+A document using many \LaTeX\ features to test {\em on-the-fly} installation
+of packages by MikTex.
+
+\paragraph{How to use.} When everything is set up correctly (MikTex install paths, write access to same), \verb+Compile PDF+ should generate a PDF much
+like the one in the \verb+reference_results+ folder.  Things to watch:
+
+\begin{itemize}
+\item Tools $\rightarrow$ Global options $\rightarrow$ Sweave, select knitr for
+      weaving, and don't enable Rnw concordance.
+\item If PDF generation succeeds with minor errors the remaining
+      processing to generate references may not be done, fix the
+      minor errors.
+\end{itemize}
+
+Citation test: \citep{greenwade93}.
 
 \section{Basic output}
 
 Simple echoed command with output
 
-<<>>=
+<<comment=NA>>=
 summary(cars)
 @
 
-\section{Plots}
+\section{Formula}
 
-Plot output
-
-<<>>=
-plot(cars)
-@
-
-Equations with LaTeX inline $E = mc^2$ and displayed
+Equations with LaTeX inline $E = mc^2$ and displayed, \verb+$$ eqn $$+ and
+\verb+\[ eqn \]+ both work.
 
 $$I = \sum{\frac{P\times V}{1}}$$
 
 \[ I =  \sum{\frac{P\times V}{1}} \]
 
 Equation with MathML (wouldn't expect this to work in \LaTeX)
-
+\begin{verbatim}
    <math><mrow>
-      <mi>a</mi> <mo>&InvisibleTimes;</mo> <msup><mi>x</mi><mn>2</mn></msup>
-      <mo>+</mo><mi>b</mi><mo>&InvisibleTimes;</mo><mi>x</mi>
-      <mo>+</mo><mi>c</mi>
+      <mi>a</mi> <mo>&InvisibleTimes;</mo> <msup> <mi>x</mi> <mn>2</mn> </msup>
+      <mo>+</mo> <mi>b</mi> <mo>&InvisibleTimes;</mo> <mi>x</mi>
+      <mo>+</mo> <mi>c</mi>
     </mrow></math>
+\end{verbatim}
+
+\section{Plots}
+
+<<echo=FALSE, fig.height=3, fig.width=5, fig.align='center', fig.cap="Distance vs. speed", fig.pos='H'>>=
+plot(cars)
+@
 
 \section{Images}
 
 \begin{figure}[ht]\centering
-\includegraphics[width=5in]{../markdown/Test_card.png}
+\includegraphics[width=2in]{../markdown/Test_card.png}
 \caption{Test image caption.}
 \label{f_test_img}
 \end{figure}
 
-
 \section{Tables}
 
-``knitr kable()`` function:
+\subsection{``knitr kable()'' function:}
 
 <<>>=
 library(knitr)
 kable(summary(cars))
 @
 
-``pander``:
+\subsection{``pander''} doesn't work in
+\LaTeX\footnote{\url{http://kbroman.org/knitr_knutshell/pages/latex.html}}:
 
-<<>>=
+<<results='asis'>>=
 library(pander)
 pander(summary(cars))
 @
 
-``xtable``:
+\subsection{``xtable'':}
 
-<<>>=
+<<r xtable, results="asis">>=
 library(xtable)
-options(xtable.type='html')
-print(xtable(summary(cars)))
+options(xtable.type='latex')
+print(xtable(summary(cars)), include.rownames=FALSE)
 @
+
+\bibliography{testref}
 
 \end{document}

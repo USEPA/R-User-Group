@@ -3,3 +3,5 @@ RLaTeX_test-concordance.tex
 RLaTeX_test.log
 RLaTeX_test.tex
 Rplots.pdf
+figure/
+RLaTeX_test.bbl
