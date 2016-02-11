@@ -2,12 +2,18 @@
 library(ggplot2)
 
 # LOAD DATA
-load("contributedCode/neptuneFigure/methaneFigure.RData")  # object is loaded as 'poo'
+load("contributedCode/neptuneFigure/methaneFigure.RData")  # object is loaded as 'poo'.  Contains emission rate data.
 emis.final <- poo  # 'poo' is silly, give new name
 
-# LETS FABRICATE AN ERROR ESTIMATE.  WILL CALCULATE TRUE ERROR ESTIMATE LATER.
+load("contributedCode/neptuneFigure/poolElevationFigure.RData") # object also loaded as 'poo'.  Contains pool elevation data.
+all.levels <- poo  # 'poo' is silly, give new name.
+
+# LETS FABRICATE AN CH4 EMISSION RATE ERROR ESTIMATE.  WILL CALCULATE TRUE ERROR ESTIMATE LATER.
 emis.final$error  <- emis.final$ch4RateBest * 0.05  # Assume 5% error
 
+
+# PLOT
+# This code produces the faceted plot without the secondary y-axis.  Use as a guide.
 # Best data: mg ch4/m2/day
 ggplot(emis.final,
   aes(date.time.deployment + ((date.time.logger.end - date.time.deployment)/2), # center of observation period
@@ -36,3 +42,11 @@ ggplot(emis.final,
 ggsave(filename="contributedCode/neptuneFigure/bestCh4EbullitionRate.tiff",
        width=10, height=7, units="in",
        dpi=1200,compression="lzw")
+
+
+# Plot of pool elevations
+ggplot(all.levels, aes(RDateTime, Elevation)) + 
+  geom_line()
+
+
+
