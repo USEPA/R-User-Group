@@ -41,17 +41,19 @@ library(gtable)
 
 # SET THE WORKING DIRECTORY
 #setwd("~/Repositories/EPA-ORD_EP-C-13-022/trunk/2015/TO 60/Task B/TD 4/")
+#not necessary if cloning github repo
 
 # LOAD DATA
-load("contributedCode/neptuneFigure/methaneFigure.RData")  # object is loaded as 'poo'.  Contains emission rate data.
-#load("data/methaneFigure.RData")
-load("contributedCode/neptuneFigure/poolElevationFigure.RData") # object also loaded as 'poo'.  Contains pool elevation data.
-#load("data/poolElevationFigure.RData")
+load("contributedCode/neptuneFigure/methaneFigure.RData")  # object is loaded as 'methaneFigure'.  Contains emission rate data.
+load("contributedCode/neptuneFigure/poolElevationFigure.RData") # object loaded as 'poo'.  Contains pool elevation data.
+
 
 # FORMAT METHANE DATA
-emis.final <- methaneFigure  # 'poo' is silly, give new name
+emis.final <- methaneFigure  # give new name
 
   ## Place the diffusive and ebullitive emission rates in the same column
+  ## Nice.  I probably would have spent a lot of time tyring to melt and cast
+  ## to accomplish this.
   df.emis <- emis.final[,-c(6,7)]
   names(df.emis)[c(4,5)] <- c("ch4Rates","ch4RatesError")
   df.emis$ch4RateType <- "Ebullition"
@@ -77,7 +79,7 @@ ggplotSecondaryAxis <- function(plot1,plot2){  # 'plot2' gets repeatedly plotted
   g1 <- ggplot_gtable(ggplot_build(plot1))
   g2 <- ggplot_gtable(ggplot_build(plot2))
   
-  ## add elevation plot's panel to each of the methan facets
+  ## add elevation plot's panel to each of the methane facets
   tops <- lefts <- c()
   grobs <- list()
   for(p in 1:length(unique(emis.final$fsite))) {  
@@ -179,7 +181,7 @@ plots <- ggplotSecondaryAxis(methanePlot,elevationPlot)
 
 # SAVE PLOT TO FILE
 plot.new()
-tiff(filename="documents/Neptune documents/Ch4EmissionRates.tiff",
+tiff(filename="contributedCode/neptuneFigure/Ch4EbulDiffWaterLevels.tiff",
        width=10, height=7, units="in",
        res=1200,compression="lzw")
 grid.draw(plots)
