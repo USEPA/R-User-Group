@@ -1,0 +1,134 @@
+% Copyright 2007 by Till Tantau
+%
+% This file may be distributed and/or modified
+%
+% 1. under the LaTeX Project Public License and/or
+% 2. under the GNU Public License.
+%
+% See the file doc/licenses/LICENSE for more details.
+
+\ProvidesPackageRCS $Header: /Users/joseph/Documents/LaTeX/beamer/base/themes/outer/beamerouterthemeEPA.sty,v 51a8c72084af 2012/10/16 20:17:59 joseph $
+
+\mode<presentation>
+
+\setbeamercolor*{author in head/foot}{parent=palette tertiary}
+\setbeamercolor*{title in head/foot}{parent=palette secondary}
+\setbeamercolor*{date in head/foot}{parent=palette primary}
+
+\setbeamercolor*{section in head/foot}{parent=palette tertiary}
+\setbeamercolor*{subsection in head/foot}{parent=palette primary}
+
+\defbeamertemplate*{footline}{infolines theme}
+{
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertshortauthor\expandafter\beamer@ifempty\expandafter{\beamer@shortinstitute}{}{~~(\insertshortinstitute)}
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+    \usebeamerfont{title in head/foot}\insertshorttitle
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+    \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{2em}
+    \insertframenumber{} / \inserttotalframenumber\hspace*{2ex} 
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
+
+%\setbeamersize{text margin left=1em,text margin right=1em}
+
+\setbeamertemplate{frametitle}{
+  \leavevmode%
+
+  \hbox{%
+    %insert the left banner and right title banner established in beamerthemeEPA.sty
+    \begin{tikzpicture}
+    \hspace{-\beamer@leftmargin}%
+    \path(0,0) pic {leftframebanner};
+    \path(0,0) pic {rightframebanner};
+    \end{tikzpicture}
+  }
+}
+
+\defbeamertemplate*{title page}{EPA}[1][]
+{
+  \vbox{}
+  %insert the left banner established in beamerthemeEPA.sty
+  \begin{tikzpicture}
+    \hspace{-\beamer@leftmargin}%
+   \path(0,0) pic {leftframebanner};
+  \end{tikzpicture}
+  \vfill
+  \begingroup
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,#1]{title}
+      \usebeamerfont{title}\inserttitle\par%
+      \ifx\insertsubtitle\@empty%
+      \else%
+        \vskip0.25em%
+        {\usebeamerfont{subtitle}\usebeamercolor[fg]{subtitle}\insertsubtitle\par}%
+      \fi%     
+    \end{beamercolorbox}%
+    \vskip1em\par
+    \begin{beamercolorbox}[sep=8pt,center,#1]{author}
+      \usebeamerfont{author}\insertauthor
+    \end{beamercolorbox}
+    \begin{beamercolorbox}[sep=8pt,center,#1]{institute}
+      \usebeamerfont{institute}\insertinstitute
+    \end{beamercolorbox}
+    \begin{beamercolorbox}[sep=8pt,center,#1]{date}
+      \usebeamerfont{date}\insertdate
+    \end{beamercolorbox}\vskip0.5em
+    {\usebeamercolor[fg]{titlegraphic}\inserttitlegraphic\par}
+  \endgroup
+  \vfill
+}
+
+\defbeamertemplate*{footline}{EPA}
+{
+  \ifnum \insertpagenumber=1
+  \leavevmode%
+      \hbox{%
+      \begin{beamercolorbox}[wd=\paperwidth,ht=2.25ex,dp=1ex,center]{}%
+        % empty environment to raise height
+      \end{beamercolorbox}}%
+      \vskip0pt%
+  \else
+    \leavevmode%
+    \hbox{%
+      \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+        \usebeamerfont{author in head/foot}\insertshortauthor\expandafter\beamer@ifempty\expandafter{\beamer@shortinstitute}{}{~~(\insertshortinstitute)}
+      \end{beamercolorbox}%
+      \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+        \usebeamerfont{title in head/foot}\insertshortsubtitle
+      \end{beamercolorbox}%
+      \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+        \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{2em}
+      \end{beamercolorbox}}%
+    \vskip0pt%
+   \fi
+}
+
+%add date to footline
+% \setbeamertemplate{footline}{%
+%   \usebeamerfont{structure}
+%   \hspace{0.05\paperwidth}
+%   \begin{beamercolorbox}[wd=0.33\paperwidth,ht=2.25ex,dp=1ex]{title in head/foot}%
+%     \insertdate
+%     \hspace{4mm}
+%   \end{beamercolorbox}
+%   \begin{beamercolorbox}[wd=0.33\paperwidth,ht=2.25ex,dp=1ex]{title in head/foot}%
+%     \insertsubtitle
+%     \hspace{4mm}
+%   \end{beamercolorbox}
+%   \begin{beamercolorbox}[wd=0.33\paperwidth,ht=2.25ex,dp=1ex]{title in head/foot}%
+%     \insertshortauthor
+%     \hspace{4mm}
+%   \end{beamercolorbox}
+% }
+
+% We will also remove the navigation symbols, which I personally don't find very useful
+\setbeamertemplate{navigation symbols}{}
+
+\mode
+<all>

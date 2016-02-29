@@ -1,0 +1,23 @@
+\frametitle{Introduction to Shiny}
+Step 2: Input from \emtxt{ui.R} sent to \emtxt{server.R}, executed
+\small
+\begin{kframe}
+\begin{alltt}
+\hlcom{# generate bins based on input from ui.R}
+\hlstd{x} \hlkwb{<-} \hlstd{faithful[,} \hlnum{2}\hlstd{]}
+\hlstd{bins} \hlkwb{<-} \hlkwd{seq}\hlstd{(}\hlkwd{min}\hlstd{(x),} \hlkwd{max}\hlstd{(x),} \hlkwc{length.out} \hlstd{= input}\hlopt{$}\hlstd{bins} \hlopt{+} \hlnum{1}\hlstd{)}
+
+\hlcom{# draw the histogram with the specified number of bins}
+\hlkwd{hist}\hlstd{(x,} \hlkwc{breaks} \hlstd{= bins,} \hlkwc{col} \hlstd{=} \hlstr{'darkgray'}\hlstd{,} \hlkwc{border} \hlstd{=} \hlstr{'white'}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\normalsize
+Step 3: Output from \emtxt{server.R} sent to \emtxt{ui.R}, plotted on app
+\small
+\begin{kframe}
+\begin{alltt}
+\hlkwd{plotOutput}\hlstd{(}\hlstr{"distPlot"}\hlstd{)}
+\end{alltt}
+\end{kframe}
+\normalsize
+Step 4: Rinse and repeat
