@@ -77,6 +77,11 @@ filled.legend(
   plot.title = title(main = "Celsius", line = .5)  # line argument adjusts spacing
   )
 
+# Place label A
+par(xpd = NA)
+text(x=-16, y=31, "A", cex = 1.5) 
+
+
 ######################################################################
 
 # Define region for second plot:
@@ -128,6 +133,10 @@ filled.legend(
   ylim = c(max(depths), 0),
   plot.title = title(main = "mg/L", line = .5)
   )
+
+# Place label B
+par(xpd = NA)
+text(x=-16, y=16, "B", cex = 1.5) 
 
 
 dev.off()
