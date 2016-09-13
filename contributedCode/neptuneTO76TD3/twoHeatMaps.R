@@ -11,11 +11,11 @@
 # to adjust spacing and legend details.
 
 # source the code that generates the necessary dataframes
-source("readUsaceSonde.R")
+source("contributedCode/neptuneTO76TD3/readUsaceSonde.R")
 
 #Source the modified functions for filled contour and legend
-source("filledcontour3.R")
-source("filledlegend.R")
+source("contributedCode/neptuneTO76TD3/filledcontour3.R")
+source("contributedCode/neptuneTO76TD3/filledlegend.R")
 
 # create new graphic with two contour plots
 tiff("output/figures/both.tif", res=1200, compression="lzw", 
