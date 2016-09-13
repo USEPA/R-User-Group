@@ -79,7 +79,7 @@ filled.legend(
 
 # Place label A
 par(xpd = NA)
-text(x=-16, y=31, "A", cex = 1.5) 
+text(x=-16, y=31, "A", cex = 1.0) 
 
 
 ######################################################################
@@ -136,7 +136,7 @@ filled.legend(
 
 # Place label B
 par(xpd = NA)
-text(x=-16, y=16, "B", cex = 1.5) 
+text(x=-16, y=16, "B", cex = 1.0) 
 
 
 dev.off()
