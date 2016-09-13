@@ -18,7 +18,7 @@ source("contributedCode/neptuneTO76TD3/filledcontour3.R")
 source("contributedCode/neptuneTO76TD3/filledlegend.R")
 
 # create new graphic with two contour plots
-tiff("output/figures/both.tif", res=1200, compression="lzw", 
+tiff("contributedCode/neptuneTO76TD3/output/figures/both.tif", res=1200, compression="lzw", 
      width=3, height=6, units='in')
 
 #plot.new() is necessary if using the modified versions of filled.contour

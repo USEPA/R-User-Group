@@ -70,7 +70,7 @@ c.usace.dam.do <- select(c.usace.dam, datetime, # create dataframe with wtr
                           grep(pattern = "doobs", colnames(c.usace.dam))) # extract DO
 
 #Plot default figures
-tiff("output/figures/tempProfile.tif", res=1200, compression="lzw", 
+tiff("contributedCode/neptuneTO76TD3/output/figures/tempProfile.tif", res=1200, compression="lzw", 
      width=6, height=6, units='in')
 wtr.heat.map(c.usace.dam.wtr, 
              key.title = title(main = "Celsius", cex.main = 1, line=1),
@@ -78,7 +78,7 @@ wtr.heat.map(c.usace.dam.wtr,
 dev.off()
 
 
-tiff("output/figures/doProfile.tif", res=1200, compression="lzw", 
+tiff("contributedCode/neptuneTO76TD3/output/figures/doProfile.tif", res=1200, compression="lzw", 
      width=6, height=6, units='in')
 wtr.heat.map(c.usace.dam.do, key.title = title(main = "mg/L", cex.main = 1, line=1),
              plot.title = title(ylab = "Depth (m)"))
