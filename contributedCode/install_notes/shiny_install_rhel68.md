@@ -75,3 +75,38 @@ dzdo status shiny-server
 
 Need to change port to an allowed port on.  For instance, change `listen 3838` to `listen 80` in `/etc/shiny-server/shiny-server.conf`.
 
+# Set up server to server from users home directory
+
+Need to edit `/etc/shiny-server/shiny-server.conf`.  There a many ways to set up, but easiest way to have shiny look in home folders of users is to replace contents of file with:
+
+```
+# Instruct Shiny Server to run applications as the user "shiny" or as home user
+run_as :HOME_USER: shiny;
+
+# Define a server that listens on port 80
+server {
+  listen 80;
+
+  # Define a location at the base URL
+  location /users {
+
+    user_dirs;
+  }
+}
+```
+
+Once update, restart the server with `reload shiny-server`
+
+To add a new user:
+
+1. Have user added to server
+2. Have them log in to initiate creation of the home directory
+3. Map `\\shiny.rtord.epa.gov\user` on their windows machine
+4. In `~` create the folder `ShinyApps`
+5. Each app should go into its own folder with the `ShinyApps`
+
+For example, `/home/jhollist/ShinyApps/test2` is served via <http://shiny.rtord.epa.gov/users/jhollist/test2>.
+
+
+
+
