@@ -42,7 +42,7 @@ dzdo rstudio-server restart
 Currently not accessible on shiny.rtord.epa.gov:8787 becuase firewalls.
 
 Can change to one of the allowed ports (e.g., 80 and 443).  To do this add
-`www-port=80` to `/etc/rstudio/rserver.conf`.  Gets you to log in screen, but log in on Centrify systems is failing.  Might not be an option...
+`www-port=443` to `/etc/rstudio/rserver.conf`.  Gets you to log in screen, but log in on Centrify systems is failing.  Might not be an option...
 
 # Install Shiny Server Open source
 
@@ -72,4 +72,6 @@ dzdo stop shiny-server
 dzdo reload shiny-server
 dzdo status shiny-server
 ```
+
+Need to change port to an allowed port on.  For instance, change `listen 3838` to `listen 80` in `/etc/shiny-server/shiny-server.conf`.
 
