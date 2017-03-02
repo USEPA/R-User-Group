@@ -47,13 +47,12 @@ sudo ldconfig
     
 # Set Paths
 # Did this for shell by adding to a /etc/profile.d/custom_exports.sh file
-export PATH="/opt/source/proj-4.9.3/bin:$PATH"
 export PATH="/opt/source/gdal-2.1.3/bin:$PATH"
-export PATH="/opt/source/geos-3.6.1/bin:$PATH"
 
 # The above doesn't register for R, so updated /usr/lib64/R/etc/Renviron.site with
 # Once geos install from source work
-/opt/source/gdal-2.1.3/bin:/opt/source/proj-4.9.3/bin:/opt/source/geos-3.6.1/bin at the end of PATH=""
+/opt/source/gdal-2.1.3/bin at the end of PATH=""
+
 # Added
 LD_LIBRARY_PATH="/opt/source/gdal-2.1.3/lib"
 
