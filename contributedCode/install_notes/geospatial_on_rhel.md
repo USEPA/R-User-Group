@@ -1,4 +1,4 @@
-These are notes I kept when trying to update GDAL on a RHEL 6.8 server. The version of GDAL from the EPEL repository is horribly out of date and doesn't play well with many of the newer geospatial packages in R (notably `sf`). No guarantees that these work but they should at least get close. As of this writing (2017-03-02), the versions of proj4 and geos pgdg96 and epel are up to date enough...
+These are notes I kept when trying to update GDAL on a RHEL 6.8 server. The version of GDAL from the EPEL repository is horribly out of date and doesn't play well with many of the newer geospatial packages in R (notably `sf`). No guarantees that these work but they should at least get close. As of this writing (2017-03-03), the versions of proj4 and geos pgdg96 and epel are up to date enough... A lot of this material inspired by <http://scigeo.org/articles/howto-install-latest-geospatial-software-on-linux.html>.
 
 Create a home for all this
 ==========================
