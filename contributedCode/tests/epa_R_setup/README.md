@@ -11,7 +11,7 @@ of the tests.  Each subfolder contains a `reference_results`
 subfolder with expected output (html, pdf, and docx for markdown, and pdf
 for LaTeX).
 
-## Items checked
+## Items checked:
 
  - R-Studio can generate HTML output from markdown
  - R-Studio / R-markdown can find MikTex and generate PDF
