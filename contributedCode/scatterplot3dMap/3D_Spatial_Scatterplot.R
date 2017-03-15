@@ -48,7 +48,7 @@ source("contributedCode/scatterplot3dMap/scatterplot3d_edit.R")
 lake <- readOGR("contributedCode/scatterplot3dMap","HarshaLake_Boundary_Alb")
 
 # load measurement data from pointfile
-data <- readOGR("contributedCode/scatterplot3dMap","cleanedSamplePointsAllMeasurements06.11.15")
+data <- readOGR("contributedCode/scatterplot3dMap","cleanedSamplePointsAllMeasurements06.05.15")
 
 # grab coordinates from polygon (in order to plot as a line on the xy plane of 3D plot)
 coords = fortify(lake)
@@ -71,17 +71,18 @@ tiff("contributedCode/scatterplot3dMap/plot.tif",  # write to .tiff file
      pointsize=7) # size of points
 
 with(data@data, {
-  NO2_3_plot <- scatterplot3d_edit(x=coords$long, y=coords$lat, z=rep(0,length(coords$long)),   # x y and z data, respectively
+  tp_plot <- scatterplot3d_edit(x=coords$long, y=coords$lat, z=rep(0,length(coords$long)),   # x y and z data, respectively
                                    color="#282830",                               # color of lake outline
                                    lwd=0.8,                                       # line width of lake outline
+                                   fill = "white",
                                    type="l",                                      # plot type - "l" = line, "h" = the lollipop style with a line  connecting to the horizontal plane 
-                                   angle=-40,                                     # angle aspect of plot (-35)
-                                   scale.y=1.75,                                  # scale y axis (increase by 175%)
+                                   angle=80,                                     # angle aspect of plot (-35)
+                                   scale.y=0.6,                                  # scale y axis (increase by 175%)
                                    #main="Nitrate at Harsha Lake",                # main plot title
-                                   xlab="",                                       # x-axis label (left blank here to reposition later)
-                                   ylab="Northing (m)",                           # y-axis label
-                                   zlab=expression(Nitrate~(mu*g~N~L^{-1})),                      # z-axis label
-                                   zlim=range(0,325),                             # range of z data shown - I grabbed the max from previously plotting the methane data here. Set so when I add the points, the z-axis fits that data. 
+                                   xlab="Easting (m)",                                       # x-axis label (left blank here to reposition later)
+                                   ylab="",                           # y-axis label
+                                   zlab=expression(Total~Phosphorus~(mu*g~P~L^{-1})),                      # z-axis label
+                                   zlim=range(0,500),                             # range of z data shown - I grabbed the max from previously plotting the methane data here. Set so when I add the points, the z-axis fits that data. 
                                    lty.axis=1,                                    # the line type of the axes
                                    axis=TRUE,                                     # wheather to include axes
                                    grid=c('xy','xz','yz'),                        # which grids to show - added to edited version of scatterplot3d fx
@@ -94,14 +95,14 @@ with(data@data, {
                                    box=FALSE                                      # get rid of the box around the plot
   )
   
-  # reposition & add x-axis label
-  dims <- par("usr")                 # format of 'dims' is vector of: [xmin,xmax,ymin,ymax]
-  x <- dims[1]+ 0.18*diff(dims[1:2]) # define x position of label
-  y <- dims[3]+ 0.16*diff(dims[3:4]) # define y position of label
-  text(x,y,"Easting (m)")            # add label
+  # reposition & add y-axis label
+  dims <- par("usr")                        # format of 'dims' is vector of: [xmin,xmax,ymin,ymax]
+  x <- dims[2] - 0.03*diff(dims[1:2])       # define x position of label
+  y <- dims[3] + 0.18*diff(dims[3:4])       # define y position of label
+  text(x,y,"Northing (m)", srt=73)          # add label.  srt sets angle
   
   # add the legend
-  legend("topright", inset=0.07,     # location and inset
+  legend("topright", inset=0.1,     # location and inset
          bty="n",                    # suppress legend box, 
          cex=0.8,                    # adjust legend size
          title="Location in Lake",
@@ -109,13 +110,13 @@ with(data@data, {
   )
   
   # add the lollipop points
-  NO2_3_plot$points3d(x=xcoord, y=ycoord, z=NO2_3, # x y and z data
+  tp_plot$points3d(x=xcoord, y=ycoord, z=TP, # x y and z data
                       col="#282830",               # color of lines connecting points to lake outline
                       lwd=0.4,                     # line width of lines connecting points to lake outline
                       pch=21,                      # type of point to plot
                       bg=colcode,                  # fill color of points
                       type="h",                    # plot type = lines to the horizontal plane
-                      cex=(NO2_3)/50            # scaling of point sizes - this will need to be adjusted for each variable
+                      cex=(TP)/100            # scaling of point sizes - this will need to be adjusted for each variable
   )
 })
 dev.off()
