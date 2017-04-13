@@ -44,8 +44,8 @@ library(gtable)
 #not necessary if cloning github repo
 
 # LOAD DATA
-load("contributedCode/neptuneFigure/methaneFigure.RData")  # object is loaded as 'methaneFigure'.  Contains emission rate data.
-load("contributedCode/neptuneFigure/poolElevationFigure.RData") # object loaded as 'poo'.  Contains pool elevation data.
+load("contributedCode/dualYaxisGgplot/methaneFigure.RData")  # object is loaded as 'methaneFigure'.  Contains emission rate data.
+load("contributedCode/dualYaxisGgplot/poolElevationFigure.RData") # object loaded as 'poo'.  Contains pool elevation data.
 
 
 # FORMAT METHANE DATA
@@ -181,7 +181,7 @@ plots <- ggplotSecondaryAxis(methanePlot,elevationPlot)
 
 # SAVE PLOT TO FILE
 plot.new()
-tiff(filename="contributedCode/neptuneFigure/Ch4EbulDiffWaterLevels.tiff",
+tiff(filename="contributedCode/dualYaxisGgplot/Ch4EbulDiffWaterLevels.tiff",
        width=10, height=7, units="in",
        res=1200,compression="lzw")
 grid.draw(plots)

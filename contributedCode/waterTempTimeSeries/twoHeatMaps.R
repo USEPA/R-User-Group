@@ -11,14 +11,14 @@
 # to adjust spacing and legend details.
 
 # source the code that generates the necessary dataframes
-source("contributedCode/neptuneTO76TD3/readUsaceSonde.R")
+source("contributedCode/waterTempTimeSeries/readUsaceSonde.R")
 
 #Source the modified functions for filled contour and legend
-source("contributedCode/neptuneTO76TD3/filledcontour3.R")
-source("contributedCode/neptuneTO76TD3/filledlegend.R")
+source("contributedCode/waterTempTimeSeries/filledcontour3.R")
+source("contributedCode/waterTempTimeSeries/filledlegend.R")
 
 # create new graphic with two contour plots
-tiff("contributedCode/neptuneTO76TD3/output/figures/both.tif", res=1200, compression="lzw", 
+tiff("contributedCode/waterTempTimeSeries/output/figures/both.tif", res=1200, compression="lzw", 
      width=3, height=6, units='in')
 
 #plot.new() is necessary if using the modified versions of filled.contour

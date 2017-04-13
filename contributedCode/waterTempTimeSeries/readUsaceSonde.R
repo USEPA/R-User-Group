@@ -11,7 +11,7 @@ library(ggplot2)
 
 
 # Read and format raw data from USACE
-usace <- read_excel(path = "contributedCode/neptuneTO76TD3/Jake B-EFR 2015 profile data.xlsx", skip = 14)
+usace <- read_excel(path = "contributedCode/waterTempTimeSeries/Jake B-EFR 2015 profile data.xlsx", skip = 14)
 colnames(usace)  <- c("station", "date.time", "depth.ft", "wtr", "doobs")
 usace <- mutate(usace, depth.ft = as.numeric(depth.ft))
 
@@ -70,7 +70,7 @@ c.usace.dam.do <- select(c.usace.dam, datetime, # create dataframe with wtr
                           grep(pattern = "doobs", colnames(c.usace.dam))) # extract DO
 
 #Plot default figures
-tiff("contributedCode/neptuneTO76TD3/output/figures/tempProfile.tif", res=1200, compression="lzw", 
+tiff("contributedCode/waterTempTimeSeries/output/figures/tempProfile.tif", res=1200, compression="lzw", 
      width=6, height=6, units='in')
 wtr.heat.map(c.usace.dam.wtr, 
              key.title = title(main = "Celsius", cex.main = 1, line=1),
@@ -78,7 +78,7 @@ wtr.heat.map(c.usace.dam.wtr,
 dev.off()
 
 
-tiff("contributedCode/neptuneTO76TD3/output/figures/doProfile.tif", res=1200, compression="lzw", 
+tiff("contributedCode/waterTempTimeSeries/output/figures/doProfile.tif", res=1200, compression="lzw", 
      width=6, height=6, units='in')
 wtr.heat.map(c.usace.dam.do, key.title = title(main = "mg/L", cex.main = 1, line=1),
              plot.title = title(ylab = "Depth (m)"))
