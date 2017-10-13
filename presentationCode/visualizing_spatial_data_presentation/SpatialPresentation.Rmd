@@ -2,9 +2,7 @@
 title: "Visualizing Spatial Data in R"
 author: "Kristin Broms, Neptune & Co."
 date: "October 18, 2017"
-output: 
-  slidy_presentation:
-    font_adjustment: -1
+output: slidy_presentation
 ---
 
 
@@ -18,13 +16,6 @@ load("Presentation_data.RData")
 ## ggmap package.  If you evaluate them, then later parts of the code that use 
 ## the plotly package will crash.  One option is that after you evaluate them, 
 ## restart R and reload the .RData to continue working through the presentation.
-
-## The network graph may require the following graph package that need to be 
-## installed from source.  (This package is not generally required to create  
-## similar graphs; they are only required for the example.  See the tutorial for  
-## other examples based on csv files.)
-# source("https://bioconductor.org/biocLite.R")
-# biocLite("graph")
 
 ```
 
@@ -53,8 +44,8 @@ As you can see, "spatial data" has come to mean much more than creating a map! V
 - View and use shapefiles in R.
 ```{r static_maps, warning=FALSE, message=FALSE, fig.height=4}
 library(rgdal)
-streams <- readOGR(dsn = "../data/R_GIS_Layers/", 
-                   layer = "Cove_Drainage_WGS84")
+# streams <- readOGR(dsn = "../data/R_GIS_Layers/", 
+#                    layer = "Cove_Drainage_WGS84")
 summary(streams)
 ```
 
@@ -85,8 +76,9 @@ ggplot() +
 - library(maps) will also provide useful backgrounds.
 ```{r static_maps2, warning=FALSE, message=FALSE, eval=FALSE}
 library(ggmap)
-devtools::install_github("hadley/ggplot2@v2.2.0")
-library(ggplot2)
+# Might need older version of ggplot2:
+# devtools::install_github("hadley/ggplot2@v2.2.0")
+# library(ggplot2)
 myLocation <- c(lon = -109.2279, lat = 36.545) 
 myMap <- get_map(location = myLocation, source = "google", 
                  maptype = "satellite", crop = FALSE, zoom = 13)
@@ -218,12 +210,10 @@ rglwidget(elementId = "plot3drgl") # to show in presentation
 ```{r, fig.height=4, warning=FALSE, message=FALSE}
 ## plotly recommends the development version of ggplot2, but will also work with the
 ## latest version of the package, version 2.2.1 
-# devtools::install_github('hadley/ggplot2')
-# library(ggplot2)
-library(devtools)
-library(dplyr)
+# library(devtools)
+devtools::install_github('hadley/ggplot2')
+library(ggplot2)
 library(plotly)
-
 p <- plot_ly(alum_data, 
              x = ~Longitude, y = ~Latitude, z = ~Result,
              marker = list(color = ~Result, 
@@ -367,10 +357,18 @@ moran.plot(lulc.sp1$PCTHERB, listw = ctchmt.nbwts.list,
 ## Appendix:  Interactive network graph
 - <http://kateto.net/network-visualization>
 ```{r network_code, warning=FALSE, message=FALSE}
+## The network graph may require the following graph package that need to be 
+## installed from source.  (This package is not generally required to create  
+## similar graphs; they are only required for the example.  See the tutorial for  
+## other examples based on csv files.)
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("graph")
+# biocLite("Rgraphviz")
+
 library(magrittr)  ## for %<>% function
-library(dplyr)  
-library(Rgraphviz)  ## to convert data to necessary data types
 library(visNetwork)  ## to create the interactive network graph
+library(jsonlite)
+library(igraph)
 network_interactive <- function(g, nodes, coords){
   ## first, switch graph construction to data frames:
   nNodes <- length(nodes)
