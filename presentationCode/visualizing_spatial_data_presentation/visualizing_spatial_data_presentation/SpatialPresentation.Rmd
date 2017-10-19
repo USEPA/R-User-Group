@@ -12,7 +12,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE, cache=FALSE)
 ## load R objects and static ggmap object
 load("Presentation_data.RData")
-
+ 
 ## Note to users: some of the code chunks have the option eval = FALSE.  That 
 ## is because they require a different (older) version of ggplot2 to use the 
 ## ggmap package.  If you evaluate them, then later parts of the code that use 
