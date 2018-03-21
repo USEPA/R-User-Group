@@ -29,8 +29,10 @@ There are many ways to access remote servers from our Windows machines, but the 
 ![FileZilla Opened](img/filezilla_open.jpg)
 
 3. To connect to the server you may either use the IP address or the hostname.  These are:
+
   - Hostname:  edap-rshiny.rtpnc.epa.gov
   - IP Address:  134.67.224.125
+  
 We will use the host name for the rest of these examples. At the top of the FileZilla window you will see a line looking for Host, Username, Password, and Port.  The hostname goes in "Host", your EPA LAN username goes into "Username", your EPA LAN password goes into "Password", and the number 22 goes into "Port".  This is the port typically used by computers for secure File Transfer Protocol.  Click on the Quickconnect button and you **should** see the something like the following:
 
 ![FileZilla Connected](img/filezilla_connected.jpg)
