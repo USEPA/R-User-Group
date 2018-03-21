@@ -5,7 +5,7 @@ This document lays out the steps to request a new shiny app on the NCC Shiny Ser
 These instructions assume you have developed and tested your shiny app locally and are ready to create a new app on the Shiny server at the NCC in RTP.  Once succesfully set-up these apps will be available to any users on the EPA network.  The process for making apps publically available has not yet been developed and currently this is not available to us.  We plan to address this in the coming months and will hopefully have a process completed in late 2018.
 
 - [Request a new app](#request-a-new-app)
-- [Move files to the Shiny server](#move-files-to-the-server)
+- [Move files to the Shiny server](#move-files-to-the-shiny-server)
 
 ## Request a new app
 
