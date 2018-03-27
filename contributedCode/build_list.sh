@@ -7,7 +7,7 @@ echo "<ul>" >> index.html
 for d in */ 
 do
 echo "<li><a href='http://edap-enviro1.rtpnc.epa.gov:3838/$d)'>$d</a></li>" 
-done >> list.html
+done >> index.html
 echo "</ul>" >> index.html
 echo "</body>" >> index.html
 echo "</html>" >> index.html
