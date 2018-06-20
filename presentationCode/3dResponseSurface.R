@@ -13,16 +13,14 @@ beta1 = .3
 beta2 = .5
 beta3 = 0.1
 
-# Generate 200 trials
-# A = c(rep(c(0), 100), rep(c(1), 100)) # '0' 100 times, '1' 100 times
-A <- rnorm(200, 100, sd=30) #18
-noisyA <- jitter (A, amount = 10)
-# B = rep(c(rep(c(0), 50), rep(c(1), 50)), 2) # '0'x50, '1'x50, '0'x50, '1'x50
+# Generate 200 observations
+A <- rnorm(200, 100, sd=30)
+noisyA <- jitter (A, amount = 10) # Add noise for more interesting points()
 B <- rnorm(200, 250, sd=85)
-noisyB <- jitter(B, amount = 15)
+noisyB <- jitter(B, amount = 15) # Add noise for more interesting points()
 e <- rnorm(200, 0, sd=1) # Random noise, with standard deviation of 1
 
-# Generate your data using the regression equation
+# Generate z using the regression equation
 z <- alpha + beta1*A + beta2*B + beta3*A*B + e
 
 # Join the variables in a data frame
@@ -51,10 +49,10 @@ pred.z <- outer(new.A, new.B, function(new.A, new.B) { # must be same names in t
 class(pred.z);str(pred.z)
 
 p <- persp(new.A, new.B, pred.z, 
-           ticktype = "detailed", # produce detailed axis
-           shade = 0.5, # add shade to surface
-           col = "lightblue",
-           theta = 40, # rotate plot
+           #ticktype = "detailed", # produce detailed axis
+           #shade = 0.5, # add shade to surface
+           #col = "lightblue",
+           #theta = 40, # rotate plot
            xlab = "A",
            ylab = "B",
            zlab = "z")
@@ -62,18 +60,6 @@ p <- persp(new.A, new.B, pred.z,
 # Can suppress default tick labels and supply custom ones
 # http://entrenchant.blogspot.com/2014/03/custom-tick-labels-in-r-perspective.html
 # Parameters to set custom tick marks and labels
-
-
-# Add points and line segment connecting surface to points
-obs <- trans3d(noisyA,
-               noisyB,
-               data$z,
-               p)
-pred  <- trans3d(noisyA,
-                 noisyB,
-                 fitted(model), p);
-points(obs, col = "red", pch=16) # add observations to plot
-segments(obs$x, obs$y, pred$x, pred$y)
 
 # Add custom color ramp
 # https://stackoverflow.com/questions/39117827/colorful-plot-using-persp
@@ -93,12 +79,28 @@ persp(new.A, new.B, pred.z,
       ylab = "B",
       zlab = "z")
 
+
+# Add points and line segment connecting surface to points
+obs <- trans3d(noisyA,
+               noisyB,
+               data$z,
+               p)
+
+points(obs, col = "red", pch=16) # add observations to plot
+
+# # This bit not working at moment
+# pred  <- trans3d(noisyA,
+#                  noisyB,
+#                  fitted(model), p);
+# segments(obs$x, obs$y, pred$x, pred$y)
+
+
+
 # 3D RESPONSE SURFACE PLOTS: interactive plot from persp3d---------------------
 library(rgl)
 persp3d(new.A, new.B, pred.z, 
       ticktype = "detailed", # produce detailed axis
       col = "red",
-      theta = 40, # rotate plot
       xlab = "A",
       ylab = "B",
       zlab = "z")
@@ -126,12 +128,21 @@ foo.fit$z <- as.numeric(foo.predict)
 # Plot
 wireframe(z ~ A * B, 
           data = foo.fit,
+          screen = list(z = -50, x = -80),
           xlab = list(label = expression(Surface~Area~(km^{2})),
                       cex = 1.5, rot = -30), # add rot to list to control rotation
           ylab = list(label = expression(TP~(mu*g~L^{-1})),
                       cex = 1.5), # add rot to list to control rotation
           zlab = list(expression(CO[2]~flux~+43~(mg~CO[2]-C~m^{-2}~d^{-1})),
                       cex = 1.5, rot = 90),
-          #shade = TRUE,
           drape = TRUE,
-          screen = list(z = -50, x = -80),)
+          col.regions = colorRampPalette(c("blue", "cyan", "green", "yellow", "red"))(n = 299),  # manual color pallete
+          # Color key values below don't make sense for this plot, but
+          # illustrate how to customize color key.
+          colorkey = list(labels = list(cex = 0.3, # size of key text
+                                        at = c(-0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1), # label location
+                                        labels = c(0.199, 0.251, 0.316, 0.398, 0.501, 0.631, 0.794)), #labels
+                          height = 0.5, # key height
+                          width = 0.5) #key width
+)
+
