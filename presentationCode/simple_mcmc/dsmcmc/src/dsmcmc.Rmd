@@ -1,0 +1,225 @@
+---
+title: "dsmcmc"
+output: html_document
+---
+
+## Some preliminaries
+
+You can clone this repo with git or download the zip file.
+
+```{r clone}
+# git clone https://github.com/puruckertom/dsmcmc.git
+# https://github.com/puruckertom/dsmcmc/archive/master.zip
+```
+
+To run it locally modify one of the Sys.info()[4] blocks below with your computer name and the location of the directory with these files.
+
+```{r prelims}
+Sys.info()[4]
+
+if(Sys.info()[4]=="DZ2626UTPURUCKE"){
+  amphibdir <- "d:\\git\\dsmcmc\\"
+}
+if(Sys.info()[4]=="Toms-Air"){
+  path.expand("~/git/dsmcmc/")
+}
+
+amphibdir_data_in <- paste(amphibdir,'data_in/',sep='')
+amphibdir_data_out <- paste(amphibdir,'data_out/',sep='')
+amphibdir_graphics <- paste(amphibdir,'graphics/',sep='')
+amphibdir_src <- paste(amphibdir,'src/',sep='')
+```
+
+## Markov Chain Monte Carlo with Metropolis-Hastings Sampler
+
+This is a simple tutorial to illustrate how to use simulation in R to combine a dataset of interest with a model and generate posterior distributions of parameters of interest. Metropolis-Hastings is a very general Markov chain sampler and perhaps the easiest to understand and explain.
+
+We need a dataset and a model to get started. The dataset will have (lab or field) observations of the phenomena of interest; the model will make in silico predictions of the same phenomena of interest. We will use a simple exposure model, but the model itself can be anything functional form (simple algebra, a regression, complex fate and transport process model, etc.)
+
+## The data set
+
+We will first import a dataset that has semi-field experimental observations of pesticide body burdens in terrestrial amphibians with covariates. In this case, we will use pesticide body burdens in amphibians. We will combine this with a model that also uses some of these covariates and makes predictions of amphibian pesticide body burdens.
+
+
+
+```{r data_set}
+# import data 
+combined_data_filename <- paste(amphibdir_data_in,"amphib_dermal_collated.csv", sep="")
+combined_data <- read.csv(combined_data_filename)
+which(combined_data$tissue_conc_ugg==min(combined_data$tissue_conc_ugg))
+# delete 593:601 -- application units are off, for #797 measurements units are off
+combined_data_drops <- combined_data[-c(593:601,797),]
+```
+
+The data set has pesticide body burdens for 788 amphibians. Also, we will use a couple of independent variables controlled in the experiment as predictors, pesticide application rate and the body weight of each of the amphibians. 
+
+```{r data_set1}
+dim(combined_data_drops)
+colnames(combined_data_drops)
+#observed tissue concs
+n <- length(combined_data_drops$tissue_conc_ugg)
+measured_tissue_concs <- combined_data_drops$tissue_conc_ugg
+```
+
+## The model
+
+We will also look at a simple exposure model that predicts body burdens in amphibians. One of the exposure parameters (dermal_af) has no information to support it, the EPA and EU have been guessing at protective but reasonable values to parameterize it. One value used has been a dermal_af of 0.5.
+
+```{r the_model}
+app_rate <- combined_data_drops$app_rate_g_cm2
+conv_rate <- 1000000.0
+body_weight <- combined_data_drops$body_weight_g
+sa_amphib_hutchinson <- 1.131 * (body_weight ^ 0.579)
+# we are interested in this parameter dermal_af
+dermal_af = 0.5
+predicted_tissue_concs = (app_rate * sa_amphib_hutchinson * conv_rate * dermal_af)/body_weight
+```
+
+## Comparing measured and predicted tissue concentrations
+
+Now we have measurements and predictions from a model of amphibian tissue concentrations. We can compare them in different ways (table, plot or statistically) to see how the model is doing.
+
+```{r compare}
+plot(log(measured_tissue_concs), log(predicted_tissue_concs))
+```
+
+Statistically, we can think about the likelihood of these 788 predicted model results for this single model run given the measured values we have for each amphibian if we make some distributional assumptions. The likelihood is the probability (density) with which we would expect the observed data to occur conditional on the parameters of the model that we look at. A common approach in modeling when comparing model predictions to measurement is to tweak the inputs in order to maximize this likelihood calculation. 
+
+```{r likelihood}
+sd = 2 #making something up, this is a second parameter that we are uninformed about
+singlelikelihoods = dnorm(measured_tissue_concs, mean = predicted_tissue_concs, sd = sd, log = T)
+sumll = sum(singlelikelihoods)
+sumll
+```
+
+## Creating a likelihood function for our model
+
+Above was a likelihood calculation for a particular parameterization of our model. Now we want to write a function that allows different inputs for the 2 parameters that we do not know much about, dermal_af from our model and sd from our likelihood calculation.
+
+```{r likelihood_function}
+likelihood <- function(param){
+  #dermal_af and sd are passed into this function via param
+  dermal_af = param[1]
+  sd = param[2]
+  
+  # this is the same model as above
+  predicted_tissue_concs = (app_rate * conv_rate * sa_amphib_hutchinson * dermal_af)/body_weight
+  # the probability of obtaining the test data above under this model
+  # we simply calculate the difference between predictions the predicted y and 
+  # the observed y, and then we have to look up the probability densities (using dnorm) 
+  # for such deviations to occur, log set to True
+  singlelikelihoods = dnorm(measured_tissue_concs, mean = predicted_tissue_concs, sd = sd, log = T)
+  # sum the likelihoods across all the obeserved differences since we are in log-space
+  # we sum the logs as convention to avoid numerical issues, etc.
+  sumll = sum(singlelikelihoods)
+  return(sumll)   
+}
+```
+
+## Prior distributions for dermal_af and sd
+
+We also want a function that will draw from probability distributions of dermal_af and sd.
+
+```{r priors}
+# specify our prior distribution for dermal_af and for sd (standard deviation)
+prior <- function(param){
+  a = param[1]
+  sd = param[2]
+  aprior = dunif(a, min=0, max=4, log = T)
+  sdprior = dunif(sd, min=0, max=10, log = T)
+  return(aprior+sdprior)
+}
+```
+
+## Posteriors
+
+The posterior is the product of the prior and the likelihood.
+```{r posterior}
+posterior <- function(param){
+  return (likelihood(param) + prior(param))
+}
+```
+
+## Proposals from the distributions for dermal_af and sd for a simulation
+
+Markov chain Monte Carlo (MCMC) is different from traditional Monte Carlo in how the proposed inputs are created. In traditional MC we would just create, for example, 10000 inputs for dermal_af in propogate them through the model to create 10000 predictions. In MCMC, the new set of inputs are conditional on the last set of accepted inputs. There are different ways to do this, but in Metropolis-Hastings we generate correlated variables from one draw to the next using the rnorm function.
+
+```{r proposal}
+# function that draws from our priors for the next likelihood calculation
+# param holds dermal_af and sd
+proposalfunction <- function(param){
+  # draw 2 values from distributions for dermal_af and sd 
+  # the mean of the distribution is the last chain input and sds are specified in the sd input
+  return(rnorm(2,mean = param, sd= c(0.1,0.3)))
+}
+```
+
+## Metropolis-Hastings Sampling
+
+Now we want a function that will run the entire simulation. We will pass some initial values for dermal_af and sd into the function, then it will use the above functions to go step by step through the chain. Importantly, after each simulation, we will compare the likelihood of the new simulation to the likelihood of the old simulation. If our new simulation is better then we keep it, if it is worse we will keep it with a probability equal to the relative likelihood versus the previous simulation.
+
+```{r mcmc, echo=FALSE}
+#metropolis
+run_metropolis_MCMC <- function(startvalue, iterations){
+  chain = array(dim = c(iterations+1,3))
+  chain[1,1:2] = startvalue
+  for (i in 1:iterations){
+    # create candidate inputs
+    proposal = proposalfunction(chain[i,1:2])
+    
+    # compare the new simulation to the previous one
+    probab = exp(posterior(proposal) - posterior(chain[i,1:2]))
+    
+    # decide to accept or reject the proposal
+    if (runif(1) < probab){
+      chain[i+1,1:2] = proposal #accept the new proposal
+    }else{
+      chain[i+1,1:2] = chain[i,1:2] #reject the new proposal and keep the previous one
+    }
+    chain[i+1,3] <- probab # save the acceptance probability in the chain
+  }
+  return(chain)
+}
+```
+
+## Running the MCMC
+
+Now we are ready to run the simulations. We need to provide some starting values for the inputs and tell the simulation function how many iterations we are interested in.
+
+```{r run_sims, echo=FALSE}
+startvalue = c(1,2) # give some initial values for dermal_af and sd
+iterations = 50000
+chain = run_metropolis_MCMC(startvalue, iterations)
+```
+
+We saved the results in the chain function. For our purposes today we are interested in the accepted inputs of dermal_af and sd.
+
+```{r acceptance, echo=FALSE}
+dim(chain)
+summary(chain)
+burnIn = 5000
+acceptance = 1-mean(duplicated(chain[-(1:burnIn),1:2]))
+acceptance
+chain_burnfree <- chain[-(1:burnIn),]
+chain_burnfree[which(chain_burnfree[,3]>1),3] <- 1
+```
+
+## Visualize the chain output
+
+Generally, Monte Carlo sampling generates independent samples from the input variables when simulating. However, Metropolis-Hastings is significantly different in that it generates correlated variables from one draw to the next. This is a big switch from more traditional Monte Carlo approaches based on importance sampling.
+
+```{r chain_graphics, echo=FALSE}
+par(mfrow = c(2,3))
+hist(chain_burnfree[,1],nclass=30, , main="Posterior of dermal_af", xlab="")
+abline(v = mean(chain_burnfree[,1]), col="red")
+hist(chain_burnfree[,2],nclass=30, main="Posterior of sd", xlab="")
+abline(v = mean(chain_burnfree[,2]), col="red" )
+hist(chain_burnfree[,3],nclass=30, main="probs", xlab="")
+abline(v = mean(chain_burnfree[,3]), col="red" )
+plot(chain_burnfree[,1], type = "l", xlab="Step #" , ylab = "Parameter", main = "Chain values of dermal_af", )
+abline(h = mean(chain_burnfree[,1]), col="red" )
+plot(chain_burnfree[,2], type = "l", xlab="Step #" , ylab = "Parameter", main = "Chain values of sd", )
+abline(h = mean(chain_burnfree[,2]), col="red" )
+plot(chain_burnfree[,3], type = "l", xlab="Step #" , ylab = "Parameter", main = "probs trace", )
+abline(h = mean(chain_burnfree[,3]), col="red" )
+```
