@@ -1,0 +1,65 @@
+---
+title: "Example Slides From R"
+subtitle: "Output to powerpoint!!"
+output: 
+  powerpoint_presentation:
+    slide_level: 3
+    reference_doc: ord_science_rmd_template.pptx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+### R Markdown
+
+This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+
+### Slide with Bullets
+
+- Bullet 1
+- Bullet 2
+- Bullet 3
+
+# A section!
+
+### Slide with R Output
+::: notes
+These are notes that *support*
+
+- a
+- little
+    - markdown
+    
+notes on slides with plot output tend to get split up...  Can fix after in ppt.
+:::
+
+
+```{r cars, echo = TRUE}
+summary(cars)
+```
+
+### Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+
+
+### Slide with Plot and Bullets in columns 
+
+:::::::::::::: {.columns}
+::: {.column}
+- These
+- Area
+- My
+- Bullets
+:::
+::: {.column}
+```{r pressure2}
+plot(pressure)
+```
+:::
+::::::::::::::
