@@ -1,0 +1,7 @@
+---
+applications:
+- name: rgdal
+  buildpacks: 
+  - https://github.com/cloudfoundry/apt-buildpack
+  - https://github.com/cloudfoundry/r-buildpack.git 
+  stack: cflinuxfs3

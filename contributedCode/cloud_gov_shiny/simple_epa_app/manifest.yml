@@ -1,0 +1,5 @@
+---
+applications:
+- name: simpleepashiny
+  buildpacks: 
+  - https://github.com/cloudfoundry/r-buildpack.git 
