@@ -6,7 +6,7 @@
 #
 
 library(shiny)
-library(rgdal)
+library(praise)
 
 shinyServer(function(input, output) {
 
