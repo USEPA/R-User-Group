@@ -105,8 +105,10 @@ ui <- fluidPage(
   # App title ----
   titlePanel("Example App with EPA Look and Feel"),
   
-  # Sidebar layout with input and output definitions ----
+  # Flow Layout
   flowLayout(
+    # Button
+    actionButton("praise", "Go ahead, you deserve it!"),
     # Output: text ----
     textOutput(outputId = "bigpraise")
   ),

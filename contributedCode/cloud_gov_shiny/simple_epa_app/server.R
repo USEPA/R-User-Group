@@ -2,6 +2,7 @@ library(praise)
 
 server <- function(input, output) {
   
-  output$bigpraise <- renderText({praise()})
+  praise_text <- eventReactive(input$praise, {praise()})
+  output$bigpraise <- renderText({praise_text()})
   
 }
