@@ -1,6 +1,4 @@
-#As of 2018-12-17 this moved into R-User-Group/contributedCode
-
-# Notes on setting up shiny on cloud.gov via dockerfile
+# Notes on setting up shiny on cloud.gov
 
 1. install cloud foundry (if not already done) and log into cloud.gov with cloud foundry
   - https://cloud.gov/docs/getting-started/setup/
