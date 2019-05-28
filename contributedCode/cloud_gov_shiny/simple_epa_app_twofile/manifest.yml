@@ -1,0 +1,11 @@
+---
+applications:
+- name: simpleepashiny
+  buildpacks: 
+  - https://github.com/cloudfoundry/r-buildpack.git
+  stack: cflinuxfs3
+  memory: 512M
+  routes:
+  - route: shiny.epa.gov/simple
+  env:
+    CF_STAGING_TIMEOUT: 15

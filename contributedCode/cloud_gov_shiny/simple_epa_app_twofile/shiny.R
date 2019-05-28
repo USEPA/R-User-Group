@@ -1,0 +1,5 @@
+library(shiny)
+source("server.R")
+source("ui.R")
+app <- shinyApp(ui = ui, server = server, uiPattern = ".*")
+runApp(app, host = "0.0.0.0", port = strtoi(Sys.getenv("PORT")))

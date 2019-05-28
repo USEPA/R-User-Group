@@ -1,6 +1,7 @@
 ---
 packages: 
   - cran_mirror: https://cran.r-project.org
+    num_threads: 4
     packages:
       - name: praise
     
