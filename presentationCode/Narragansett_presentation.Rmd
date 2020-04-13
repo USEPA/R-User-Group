@@ -1,0 +1,353 @@
+---
+title: "Narragansett Fish Tissue Study"
+output:
+  html_document:
+    df_print: paged
+---
+This script does exploratory data analysis on concentrations of various analytes in fish tissue, part of EPA TD 4
+
+Client contact: Valerie Bataille
+
+Script by Hayley Brittingham
+
+
+```{r setup}
+require(dplyr)
+require(ggplot2)
+theme_set(theme_bw())
+```
+
+other packages that must be installed (always called by namespace): xlsx, tidyr, scales, ggrepel, gridExtra 
+
+# Read in Data
+
+```{r read in data}
+data_2015<-openxlsx::read.xlsx("../data/1.2 Scrubbed Namaus Project Fish Tissue Data 19Mar19.xlsx",
+                sheet = "Namaus Project 2015 Data", cols = 1:67)
+
+data_2016<-openxlsx::read.xlsx("../data/1.2 Scrubbed Namaus Project Fish Tissue Data 19Mar19.xlsx",
+                           sheet = "Namaus Project 2016 Data", cols = 1:67)
+
+PCB_data_2015<-openxlsx::read.xlsx("../data/1.2 Scrubbed Namaus Project Fish Tissue Data 19Mar19.xlsx",
+                          sheet = "2015 Stats", cols = 1:58) 
+
+head(data_2015)
+```
+
+* A note about xlsx::read.xslx -- often causes Java errors, especially with newer versions of R
+
+# Look at Variables Available
+
+* Many variables are the same within a species
+
+```{r data tables 2015 species}
+data_2015 %>% dplyr::group_by(Species) %>%
+  dplyr::summarise(Min_weight=paste(unique(RI_Min_Wt), collapse = ", "),
+                   Min_length=paste(unique(RI_Min_Lg), collapse = ", "),
+                   Trophic=paste(unique(Trophic), collapse = ", "))
+```
+
+* Many more variables are the same within a pond
+
+```{r data tables 2015 ponds}
+data_2015 %>% dplyr::group_by(Pond) %>%
+  dplyr::summarise(N=length(Trans),
+                   Trans=paste(unique(Trans), collapse = ", "),
+                   Chloro=paste(unique(Chloro), collapse = ", "),
+                   Phos=paste(unique(Phos), collapse = ", "),
+                   Nitrogen=paste(unique(Nitrogen), collapse = ", "),
+                   pH=paste(unique(pH), collapse = ", "),
+                   Oxygen=paste(unique(Oxygen), collapse = ", "),
+                   Conduct=paste(unique(Conduct), collapse = ", "),
+                   Water=paste(unique(Water), collapse = ", "),
+                   Vege=paste(unique(Vege), collapse = ", "),
+                   Ecoli=paste(unique(Ecoli), collapse = ", "))
+```
+
+# Combine and Organize Data
+
+* A single cohesive dataset will be easier to work with
+
+```{r }
+unique(names(data_2015)==names(data_2016))
+all_data<-rbind(data_2015, data_2016)
+```
+
+* For ease of plotting, want to rename the variables according to the codebook
+
+****QA IMPORTANT****
+
+```{r rename variables}
+all_data<-all_data %>% 
+  dplyr::mutate(Pond = ifelse(Pond==0, "Schoolhouse Pond", 
+                              ifelse(Pond==1, "Deep Pond", 
+                                     ifelse(Pond==2, "Upper Schoolhouse Pond", 
+                                            ifelse(Pond==3, "Lower Schoolhouse Pond", NA)))), 
+                Species=ifelse(Species==1, "Largemouth Bass", 
+                               ifelse(Species==2, "Yellow Perch", 
+                                      ifelse(Species==3, "Pumpkinseed", 
+                                             ifelse(Species==4, "American Eel",
+                                                    ifelse(Species==5, "Chain Pickerel",
+                                                           ifelse(Species==6, "Brown Bullhead",
+                                                                  ifelse(Species==7, "Mussel", NA))))))),
+                Sex=ifelse(Sex==1, "Female", ifelse(Sex==2, "Male", ifelse(Sex==8, NA, ifelse(Sex==9, "Pooled Specimen/NA", NA)))),
+                Method=ifelse(Method==1, "electrofishing", 
+                              ifelse(Method==2, "seine", 
+                                     ifelse(Method==3, "rod n reel", 
+                                            ifelse(Method==4, "hand harveted", 
+                                                   ifelse(Method==9, "Pooled sample/NA",NA))))),
+                Guts_Contents=ifelse(Guts_1==0, "Empty Stomach", 
+                                     ifelse(Guts_1==1, "Shiner", 
+                                            ifelse(Guts_1==2, "Yellow Perch", 
+                                                   ifelse(Guts_1==3, "Crayfish", 
+                                                          ifelse(Guts_1==4, "Insect", 
+                                                                 ifelse(Guts_1==5, "Isopod/Invasive species (woodlice)", 
+                                                                        ifelse(Guts_1==6, "Leeches",
+                                                                               ifelse(Guts_1==7, "Snapping Turtle", 
+                                                                                      ifelse(Guts_1==8, "unidentifiable",
+                                                                                             ifelse(Guts_1==9, "pooled sample", 
+                                                                                                    ifelse(Guts_1==10, "Shrimp", 
+                                                                                                           ifelse(Guts_1==11, "Worms", 
+                                                                                                                  ifelse(Guts_1==12, "Killifish", 
+                                                                                                                         ifelse(Guts_1==13, "Fish Hook", NA)))))))))))))),
+                Lab_Analysis=ifelse(Run==0, "Not analyzed", ifelse(Run %in% c(1:6), "Analyzed", ifelse(Run==7, "Mean", ifelse(Run==8, "Standard Deviation", NA)))),
+                Water_level=ifelse(Water==2, "High", ifelse(Water==1, "Medium", ifelse(Water==0, "Low", NA))),
+                Vege=ifelse(Vege==2, "Abundant", ifelse(Vege==1, "Normal", ifelse(Vege==0, "Low", NA))))
+
+#organize the PCB data in the same way
+PCB_data_2015<-PCB_data_2015 %>% dplyr::filter(Pond %in% c(0,1)) %>%
+  dplyr::mutate(Pond = ifelse(Pond==0, "Schoolhouse Pond", 
+                              ifelse(Pond==1, "Deep Pond", 
+                                     ifelse(Pond==2, "Upper Schoolhouse Pond", 
+                                            ifelse(Pond==3, "Lower Schoolhouse Pond", NA)))), 
+                Species=ifelse(Species==1, "Largemouth Bass", 
+                               ifelse(Species==2, "Yellow Perch", 
+                                      ifelse(Species==3, "Pumpkinseed", 
+                                             ifelse(Species==4, "American Eel",
+                                                    ifelse(Species==5, "Chain Pickerel",
+                                                           ifelse(Species==6, "Brown Bullhead",
+                                                                  ifelse(Species==7, "Mussel", NA))))))),
+                Sex=ifelse(Sex==1, "Female", ifelse(Sex==2, "Male", ifelse(Sex==8, NA, ifelse(Sex==9, "Pooled Specimen/NA", NA)))),
+                No=as.numeric(as.character(No))) %>%
+  dplyr::select(No, Pond, Species, C_PCBs, NC_PCBs, Year) %>%
+  tidyr::gather(key="Analyte", value="Concentration", c("C_PCBs", "NC_PCBs"))
+
+#identify the analytes 
+analytes<-c("X.15N", "X.13C", "Se_Hg", "Se_Molar", "Hg_Molar", "Se", "Hg", "As", "Cd", "Co", "Cr", "Cu", "Pb", "Mn", "Ni", "Pt", "Ag", "Sn", "Zn", 
+            "EPA", "DHA", "ΣPUFAs")
+#rm Se_Hg, molar vars, C13 and N15 for now
+analytes<-analytes[-which(analytes %in% c("Se_Hg", "Se_Molar", "Hg_Molar", "X.15N", "X.13C"))]
+pcbs<-c("PCB_118_LA", "PCB_126_LA", "PCB_138_LA", "PCB_153_LA", "PCB_180_LA", "ΣPCBs_LA", "PCB_118", "PCB_126", "PCB_138", "PCB_153", "PCB_180", "ΣPCBs")
+all_analytes<-c(analytes, pcbs)
+
+#convert the data to a long format for ease of plotting.
+all_data_long<-all_data %>% 
+  # dplyr::mutate(ΣC_PCBs = as.numeric(as.character(PCB_118)) + as.numeric(as.character(PCB_126)), 
+  #                ΣNC_PCBs = as.numeric(as.character(PCB_138)) + 
+  #                  as.numeric(as.character(PCB_153)) + as.numeric(as.character(PCB_180))) %>%
+  tidyr::gather(key="Analyte", value="Concentration", all_analytes) %>%
+  dplyr::mutate(Concentration=as.numeric(as.character(Concentration)),
+         EPA_DHA=as.numeric(as.character(EPA_DHA)),
+         DHA_EPA=as.numeric(as.character(DHA_EPA))) %>%
+  dplyr::filter(No!=0, !is.na(Concentration)) %>%
+  dplyr::select(No, Pond, Species, Year, Analyte, Concentration) %>%
+  # dplyr::select(-RI_Min_Wt, -RI_Min_Lg, -Lat, -Long, -Guts_1, -Lipid, -Trans, -Chloro,
+  #        -Phos, -Nitrogen, -pH, -Oxygen, -Conduct, -Water, -Vege, -Ecoli) %>%
+  rbind(., PCB_data_2015) %>%
+  dplyr::mutate(Concentration=as.numeric(as.character(Concentration)))
+
+all_data_long$Units<-ifelse(all_data_long$Analyte %in% c("DHA", "EPA", "ΣPUFAs"), "(mg/g)", 
+                            ifelse(all_data_long$Analyte %in% analytes, "(μg/g)",
+                                   ifelse(all_data_long$Analyte %in% c(pcbs, "NC_PCBs", "C_PCBs"), "(ng/g)", NA)))
+all_data_long$Analyte_lab<- paste(all_data_long$Analyte, all_data_long$Units)
+
+head(all_data_long)
+```
+
+## Initial Plots
+
+```{r bad plots 1}
+ggplot(all_data_long[which(all_data_long$Analyte %in% analytes),], 
+       aes(x=Analyte_lab, y=Concentration)) +
+  geom_boxplot() + geom_point(shape=21) +
+  labs(y="Concentration (dry weight)") + 
+  scale_y_continuous(trans="log10") + 
+  annotation_logticks(sides="l") +
+  theme(axis.text.x = element_text(angle=60, vjust=0.7)) 
+```
+
+```{r bad plots 2, fig.height=8}
+ggplot(all_data_long[which(all_data_long$Analyte %in% analytes),], 
+       aes(x=Pond, y=Concentration)) +
+  geom_boxplot() + geom_point(aes(color=Pond)) + 
+  facet_wrap(~Analyte_lab, scales="free_y") + labs(y="Concentration (dry weight)") + 
+  ggtitle("All Species: non-PCBs") +
+  theme(axis.text.x = element_text(angle=90), plot.title=element_text(hjust=0.5),
+        legend.position = "none")
+```
+
+## Revised Plots
+
+* Bar charts
+
+```{r bar Hg, fig.height=8}
+#In this case, more interested in species comparisons than pond comparisons
+
+#summarize data for a bar graph #first by species
+bar_dat<-all_data_long %>% dplyr::group_by(Analyte_lab, Analyte, Pond, Species) %>% 
+  summarise(mean_conc=mean(Concentration, na.rm=T), 
+            n=length(which(!is.na(Concentration))),
+            SE=sd(Concentration, na.rm = T)/sqrt(n))
+
+#bar graphs concentration vs species, faceted by analyte
+ggplot(bar_dat[which(bar_dat$Analyte %in% analytes & bar_dat$Pond=="Deep Pond"),]) +
+  geom_bar(aes(x=Species, y=mean_conc, fill=Species), stat="identity") + 
+  geom_errorbar(aes(x=Species, ymin=mean_conc-SE, ymax=mean_conc + SE)) +
+  facet_wrap(~Analyte_lab, scales="free_y") + labs(y="Concentration (dry weight)") + 
+  ggtitle("All Species: non-PCBs") +
+  theme(axis.text.x = element_text(angle=90), plot.title=element_text(hjust=0.5),
+        legend.position = "none")
+
+#we want the legend for the species to be the same for all plots. 
+color.vec<-scales::hue_pal()(length(unique(bar_dat$Species)))
+names(color.vec)=unique(factor(bar_dat$Species))
+color.vec
+```
+
+```{r bar graph Hg}
+#bar graph by species, Hg only.
+ggplot(bar_dat[which(bar_dat$Analyte =="Hg"),]) +
+  geom_bar(aes(x=Species, y=mean_conc, fill=Species), stat="identity", show.legend = F) + 
+  geom_errorbar(aes(x=Species, ymin=mean_conc-SE, ymax=mean_conc + SE)) +
+  facet_wrap(~Pond) + labs(y="Hg Concentration (dry weight, ug/g)") + 
+  ggtitle("Mercury Concentration by Pond and Species") +
+  geom_hline(aes(yintercept=0.049, linetype="Subsistence")) +
+  geom_hline(aes(yintercept=0.4, linetype="Recreational")) +
+  theme(axis.text.x = element_text(angle=60, vjust=.5, size=11), 
+        axis.title = element_text(size=12), axis.text.y = element_text(size=11),
+        strip.text = element_text(size=13),
+        plot.title=element_text(hjust=0.5)) +
+  scale_fill_manual(values = color.vec) + labs(linetype="")
+
+```
+
+* Same idea as a pie chart
+  * Emphasizes relative nature of research goals
+  * Looking at contamination as a whole
+  
+```{r }
+  #calculate percentages for a pie chart
+#schoolhouse pond
+pie_dat_SH<-all_data_long %>% dplyr::group_by(Analyte_lab, Analyte, Pond, Species) %>% 
+  dplyr::filter(Pond=="Schoolhouse Pond", Analyte=="Hg") %>%
+  dplyr::summarise(sum_conc=sum(Concentration), Nfish=length(Concentration)) %>%
+  dplyr::mutate(perc_conc=sum_conc/sum(sum_conc), perc_conc_label=paste0(round(perc_conc,2)*100, "%")) %>%
+  dplyr::arrange(-perc_conc) %>%
+  dplyr::mutate(Species=factor(Species, levels = unique(Species))) %>%
+  dplyr::arrange(perc_conc) %>%            
+  dplyr::mutate(cum_sum=cumsum(perc_conc))
+
+pie_dat_SH$mid_sum<-pie_dat_SH$cum_sum/2
+for (i in 2:nrow(pie_dat_SH)) {
+  #just played with these numbers such that the text was always readable and towards the middle of the slice
+  adj<-ifelse(i==2, 0.03, ifelse(i==3, -.01, 0)) 
+  pie_dat_SH$mid_sum[i]<-(pie_dat_SH$cum_sum[i-1] + pie_dat_SH$cum_sum[i]) /2 + adj
+}
+
+head(pie_dat_SH)
+pie_SH<-ggplot(pie_dat_SH) +
+  geom_bar(aes(x=0, y=perc_conc, fill=Species, group=Species), stat="identity") + 
+  # ggrepel::geom_text_repel(aes(x=0, y=mid_sum, label=perc_conc_label)) +
+  ggrepel::geom_text_repel(data=pie_dat_SH[which(pie_dat_SH$Species!="Brown Bullhead"),],
+                           aes(x=0, y=mid_sum, label=perc_conc_label)) +
+  ggrepel::geom_text_repel(data=pie_dat_SH[which(pie_dat_SH$Species=="Brown Bullhead"),],
+                           aes(x=0.2, y=mid_sum, label=perc_conc_label), nudge_x = 0.8) +
+  labs(y="", x="") + 
+  ggtitle("Schoolhouse Pond") +
+  theme(axis.ticks = element_blank(), plot.title=element_text(hjust=0.5), axis.text = element_blank()) +
+  coord_polar("y", start=0) +
+  scale_fill_manual(values=color.vec)
+pie_SH
+
+#same for Deep pond
+pie_dat_DP<-all_data_long %>% dplyr::group_by(Analyte_lab, Analyte, Pond, Species) %>% 
+  dplyr::filter(Pond=="Deep Pond", Analyte=="Hg") %>%
+  dplyr::summarise(sum_conc=sum(Concentration), Nfish=length(Concentration)) %>%
+  dplyr::mutate(perc_conc=sum_conc/sum(sum_conc), perc_conc_label=paste0(round(perc_conc,2)*100, "%")) %>%
+  dplyr::arrange(-perc_conc) %>%
+  dplyr::mutate(Species=factor(Species, levels = unique(Species))) %>%
+  dplyr::arrange(perc_conc) %>%            
+  dplyr::mutate(cum_sum=cumsum(perc_conc))
+
+pie_dat_DP$mid_sum<-pie_dat_DP$cum_sum/2
+for (i in 2:nrow(pie_dat_DP)) {
+  #just played with these numbers such that the text was always readable and towards the middle of the slice
+  adj<-ifelse(i==2, 0.025, ifelse(i==3, -.01, 0.01))
+  pie_dat_DP$mid_sum[i]<-(pie_dat_DP$cum_sum[i-1] + pie_dat_DP$cum_sum[i]) /2 + adj
+}
+
+pie_DP<-ggplot(pie_dat_DP[which(pie_dat_DP$Analyte =="Hg" & pie_dat_DP$Pond=="Deep Pond"),]) +
+  geom_bar(aes(x=0, y=perc_conc, fill=Species, group=Species), stat="identity") + 
+  ggrepel::geom_text_repel(data=pie_dat_DP[which(pie_dat_DP$Species!="Brown Bullhead"),],
+                           aes(x=0, y=mid_sum, label=perc_conc_label)) +
+  ggrepel::geom_text_repel(data=pie_dat_DP[which(pie_dat_DP$Species=="Brown Bullhead"),],
+                           aes(x=0.2, y=mid_sum, label=perc_conc_label), nudge_x = 0.8) +
+  labs(y="", x="") + 
+  ggtitle("Deep Pond") +
+  theme(axis.ticks = element_blank(), plot.title=element_text(hjust=0.5), axis.text = element_blank()) +
+  coord_polar("y", start=0) +
+  scale_fill_manual(values=color.vec)
+pie_DP
+```
+
+## Plots for PCBs
+
+```{r PCBs, fig.width=10}
+bar_dat_sum<-all_data_long %>% dplyr::group_by(Analyte_lab, Analyte, Pond, Units) %>% 
+  dplyr::summarise(mean_conc=mean(Concentration, na.rm = TRUE), SE=sd(Concentration, na.rm = TRUE)/sqrt(length(!is.na(Concentration)))) %>%
+  dplyr::mutate(Analyte2=ifelse(Analyte %in% pcbs, gsub("_LA", "", gsub("PCB_", "", Analyte)),
+                               ifelse(Analyte=="Hg", "Hg", as.character(Analyte))),
+                An_cat=ifelse(Units=="(μg/g)", "Other Analytes (μg/g)", 
+                              ifelse(grepl("LA", Analyte), "Lipid Adjusted PCBs (ng/g)", 
+                                           "PCBs (ng/g)")),
+                An_cat=factor(An_cat, levels = c("Lipid Adjusted PCBs (ng/g)", "PCBs (ng/g)", "Other Analytes (μg/g)")),
+                An_cat2 = ifelse(An_cat=="PCBs (ng/g)", "PCBs - 2015 only (ng/g)", as.character(An_cat)),
+                An_cat2=factor(An_cat2, levels = c("Lipid Adjusted PCBs (ng/g)", "PCBs - 2015 only (ng/g)", "Other Analytes (μg/g)")),
+                SL=ifelse(Analyte2=="Hg", 0.049, 
+                          ifelse(Analyte2=="Se", 2.457,
+                                 ifelse(Analyte2=="NC_PCBs", 2.45, 
+                                        ifelse(Analyte2=="C_PCBs", 9.8, NA)))),
+                Analyte_lab2=ifelse(Analyte2=="Hg", "Mercury", 
+                                   ifelse(Analyte2=="Se", "Selenium", 
+                                          ifelse(Analyte2=="C_PCBs", "Sum Carcinogenic PCBs", 
+                                                 ifelse(Analyte2=="NC_PCBs", "Sum Non-Carcinogenic PCBs", as.character(Analyte2)))))) %>%
+  dplyr::filter(Analyte %in% c("Hg","Se","NC_PCBs","C_PCBs", pcbs))
+
+'%!in%' <- function(x,y)!('%in%'(x,y))
+
+ggplot(bar_dat_sum[which(bar_dat_sum$Analyte2 %in% c("Hg", "Se", "C_PCBs", "NC_PCBs") &
+                           bar_dat_sum$An_cat2=="PCBs - 2015 only (ng/g)"),]) +
+  geom_bar(aes(x=Analyte_lab2, y=mean_conc, fill=Analyte_lab2), stat="identity") + 
+  geom_errorbar(aes(x=Analyte_lab2, ymin=mean_conc-SE, ymax=mean_conc + SE)) +
+  facet_wrap(~Pond) +labs(y="Mean Concentration (dry weight, ng/g)", x="Analyte") + 
+  theme(plot.title=element_text(hjust=0.5), axis.text = element_text(size=12), 
+        axis.title = element_text(size=13), strip.text = element_text(size=13),
+        legend.position = "none") +
+  geom_errorbar(aes(x=Analyte_lab2, ymin=SL, ymax=SL,color="Screening Level")) +
+  scale_color_manual(values="red") + scale_fill_brewer(palette = "Accent")
+
+```
+
+```{r by species}
+ggplot(bar_dat[which(bar_dat$Analyte == "C_PCBs"),]) +
+  geom_bar(aes(x=Species, y=mean_conc, fill=Species), stat="identity") + 
+  geom_errorbar(aes(x=Species, ymin=mean_conc-SE, ymax=mean_conc + SE)) +
+  facet_wrap(~Pond) + labs(y="Concentration (dry weight, ng/g)") + 
+  ggtitle("Carcinogenic PCBs Concentration by Pond and Species") +
+  geom_hline(aes(yintercept=9.8, linetype="Subsistence")) +
+  # geom_hline(aes(yintercept=20, linetype="Recreational")) +
+  theme(axis.text.x = element_text(angle=60, vjust=.5), plot.title=element_text(hjust=0.5),
+        legend.position = "none") +
+  scale_fill_manual(values = color.vec)
+
+```
