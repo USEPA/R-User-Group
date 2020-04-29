@@ -4,7 +4,7 @@ applications:
   buildpacks: 
   - https://github.com/cloudfoundry/r-buildpack.git
   stack: cflinuxfs3
-  memory: 512M
+  memory: 256M
   routes:
   - route: shiny.epa.gov/simple
   env:
