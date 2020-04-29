@@ -11,8 +11,8 @@ These instructions assume you have developed and tested your shiny app locally a
 
 Once your app is working locally and ready to be moved to the NCC Shiny Server you will need to request access to the server.  To do so:
 
-1. Send an email to analytics@epa.gov to let them know you have a Shiny app you want to put on the Shiny server.  They need to provide you access.  Make sure to cc vega.ann@epa.gov on this email.
-2. In the email, include a list of all R packages needed to run your Shiny app. Request that they be installed on the server.
+1. Send an email to eisd@epa.gov to request access to the NCC Shiny Server. Make sure to Cc Ann Vega (vega.ann@epa.gov), Tom Scheitlin (scheitlin.tom@epa.gov), and analytics@epa.gov on this email.  These Cc's are important as they inform the required people of the request and should make it easier for you to keep track of the progress.
+2. In the email let them know you have a Shiny app you want to put on the Shiny server.  Be sure to include a list of all R packages needed to run your Shiny app. Request that they be installed on the server.
 
 Once you have been granted access to the server and all the packages you requested have been installed, you will receive an email with next steps.  The most important of which will be moving your application files to the server.
 
