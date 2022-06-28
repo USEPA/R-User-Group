@@ -1,7 +1,9 @@
 R-User-Group
 ============
 
-This repository is for code, documentation, presentations, etc. for the USEPA ORD R user group.  If you would like to contribute to this repository please follow the guidelines in [CONTRIBUTING](CONTRIBUTING.md).
+This repository is for code, documentation, presentations, etc. for the USEPA ORD Python user group. Be sure you don't post anything here that needs clearing.
+
+If you would like to contribute to this repository please follow the guidelines in [CONTRIBUTING](CONTRIBUTING.md).
 
 This repository is released under the [Creative Commons Zero public domain dedication](LICENSE).
 
