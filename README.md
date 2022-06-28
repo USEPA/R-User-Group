@@ -1,7 +1,7 @@
 R-User-Group
 ============
 
-This repository is for code, documentation, presentations, etc. for the USEPA ORD Python user group. Be sure you don't post anything here that needs clearing.
+This repository is for code, documentation, presentations, etc. for the USEPA ORD Python user group. Be sure you don't post anything here that needs to be cleared before public release.
 
 If you would like to contribute to this repository please follow the guidelines in [CONTRIBUTING](CONTRIBUTING.md).
 
