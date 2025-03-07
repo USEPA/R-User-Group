@@ -1,0 +1,816 @@
+---
+title: "NRSA_DataVis"
+execute: 
+  echo: true
+  warning: false
+  message: false
+author: LR,NS
+format: 
+  html:
+    embed-resources: true
+    toc: true
+    toc-depth: 3
+knitr:
+  opts_chunk:
+    out.width: "100%"
+editor: visual
+---
+
+Please install the pacman package first to run this code. This can be done in the Install package button of the Packages tab in the lower right section of of R studio.
+
+```{r}
+
+
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(here,conflicted,tidyverse,ggcorrplot,gt,readxl,writexl,viridis,scales,markdown,knitr,lubridate,ggthemes,janitor,leaflet,sf,mapview,tibbletime,)
+
+library(here)
+library(conflicted)
+library(tidyverse)
+conflict_prefer("filter", "dplyr")
+conflict_prefer("select", "dplyr")
+conflict_prefer("group_by", "dplyr")
+conflict_prefer("ungroup", "dplyr")
+library(gt)
+library(readxl)
+library(writexl)
+library(viridis)
+library(scales)
+library(markdown)
+library(knitr)
+library(lubridate)
+conflict_prefer("year", "lubridate")
+conflict_prefer("month", "lubridate")
+library(ggthemes)
+library(ggtext)
+library(janitor)
+library(leaflet)
+library(sf)
+library(mapview)
+library(tibbletime)
+library(reactable)
+library(htmltools)
+library(ggcorrplot)
+
+
+```
+
+## Disclaimer
+
+The views expressed in this code do not represent the views or the policy of EPA and no part of this code or presentation should be considered an endorsement by EPA.
+
+## Data Visualization
+
+To visualize data, you should first think about the vehicle - will you send someone a powerpoint? A workbook with 20 worksheets full of data and plots? A few iPhone pictures of your desktop R space?
+
+You can produce anything from a word document to pdf directly from this Quarto document, but html is preferable - the graphics are nice (and easy) and the maps are really easy. html is definitely the way to go to communicate with your colleagues.
+
+It will pay to become familiar with Quarto. It is basically a word processor that will run code. As quoted, when you open a new document:
+
+"Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>."
+
+There are two options from which to edit - Source and Visual (found as "buttons" in the top left. When writing code, Source is easier. When writing text that will appear in a pdf or html, Visual is the better choice and makes things easier. Try both and get used to switching between the to editing options.
+
+### pdf
+
+Producing (rendering) pdf from a Quarto doc is not as straightforward as html. To render a pdf, you will need a LaTeX distribution. TinyTeX works well for this. You will likely need your IT folks to sign off just like you might with your R install (if not - you can just get TinyTeX and install it). TinyTex is not to be confused with the R package tinytex, which includes helper functions and the like. This install is straightforward. There is a learning curve as the ins and outs of LaTeX are not the same as html. But if your organization insists on pdf and you produce a lot of pdf docs - learning to do this in R is worthwhile.
+
+<https://bookdown.org/yihui/rmarkdown-cookbook/install-latex.html>
+
+### Presentations
+
+Quarto will output a presentation as html, pdf, or powerpoint. Quarto with revealjs will output a nice html slideshow. It is really simple and there are some good instructions online. It's probably best to start a new quarto doc for this purpose and use plots output from other code or import finished datasets for the plots and maps in the slideshow quarto doc. If you want to include photos - you can copy those into working directory.
+
+<https://quarto.org/docs/presentations/>
+
+If you are still in the same R session - you can just continue with the nrsa_fsh_ls. If not, you'll need to output that from the other code (as csv or xlsx) and then bring it in here.
+
+Before jumping right into visualization, two features are important when visualizing data and should be explained up front - factors and colors.
+
+## Factors
+
+In the overview of the forcats package, factors are described:
+
+"R uses factors to handle categorical variables, variables that have a fixed and known set of possible values. Factors are also helpful for reordering character vectors to improve display."
+
+Factors are generally descriptive of the data and have a fixed set of values (fish genus), (direction n,s,e,w), etc. levels describe the number of those values. In our example, STATE can be a factor (50 levels), FISH_PROTOCOL (4 levels). The re-ordering part is important in visualizations because the order that data is presented on a plot or table can help convey your meaning.
+
+Ordering a factor is straigtforward. One can make an ordered factor as a new column using mutate or just re-order the levels of an existing column. That order will remain unless you order it in a different way with mutate.
+
+```{r}
+
+nrsa_fsh_ls <- read.csv("nrsa_fsh_ls.csv")
+
+nrsa_fsh_ls <- nrsa_fsh_ls |> #overwrites the tibble
+  mutate(FISH_PROTOCOL=factor(FISH_PROTOCOL,
+                                 levels=c("SM_WADEABLE",
+                                          "LG_WADEABLE",
+                                          "SM_NONWADEABLE",
+                                          "LG_NONWADEABLE")))
+
+```
+
+## Colors
+
+Defining palettes is a way to control the colors used in data visualizations. There is no end to color combinations that you can use - however it is best practice to use a palette that is color blind discernible.
+
+Since R version 4, the default palette is designed to be more discriminatory for colorblindness.
+
+<https://journal.r-project.org/articles/RJ-2023-071/>
+
+A nice discussion on color
+
+<https://ggplot2-book.org/scales-colour>
+
+viridis is a color palette that is available in ggplot2 and is color blind perceivable. If you want to assign particular colors to particular values or conditions, you can create your own color palette using the hexidecimal codes of the colors. When these codes are typed in R Studio it shows the color. You can use the show_col() function to show the colors of palettes - in the example below we show 16 of the viridis discrete colors (the viridis palette is a default continuous color ramp).
+
+<https://jmsallan.netlify.app/blog/the-viridis-palettes/>
+
+Making a palette is usually done in code right prior to the plot or table, but really can be defined anywhere - it is just a list of colors in the order you want them to appear. The reason it is usually defined right before a plot is that you sometimes need to re-order the colors to meet your intent. Plot, reorder, plot, reorder, etc.
+
+```{r}
+
+#show discrete colors of the viridis package
+
+show_col(scales::viridis_pal()(16))
+
+pal3=c("#414487FF", "#23888EFF", "#FDE725FF")
+
+```
+
+## Maps
+
+There is a lot on the web regarding spatial data in R. Below are a few maps that will get you started.
+
+It is necessary to know the datum of your GPS coordinates for proper projection.
+
+<https://www.nceas.ucsb.edu/sites/default/files/2020-04/OverviewCoordinateReferenceSystems.pdf>
+
+All of the NRSA coordinates are NAD83. Note that the NRSA team named the LAT LON fields as LAT_DD83, LON_DD83, which is a nice shorthand indicating this.
+
+### sf package
+
+The sf package is indispensable and is the workhorse for mapmaking in R. st_as_sf gets your lat long data into a spatial dataframe ready to project onto a map.
+
+```{r}
+
+# The NAD83 datum has an EPSG code of 4269.  This is indicated in the crs= call below.
+
+#Change this code for your coordinate system.  The projection of the points must match the projection of the shapefile or basemap.
+
+# It is important that the LON be listed first in the st_as_sf call.
+
+#the filter is there in case there are any latlongs that are missing (there aren't any missing in this dataset).  If there are missing lat longs in your data it is up to you to either correct that or estimate them with a lat long by editing your raw data.  Or just don't plot those points (as below).    
+
+gis_nrsa <- nrsa_fsh_ls |> 
+  filter(!is.na(LAT_DD83)) |>   
+  st_as_sf(coords = c("LON_DD83", "LAT_DD83"),crs = 4269, agr = "constant") 
+
+# examine this file and notice what it did.  
+
+```
+
+### mapview
+
+<https://r-spatial.github.io/mapview/articles/mapview_01-basics.html>
+
+mapview is an easy to use API or wrapper that does its work with the leaflet package. Its quite developed and might be all you'll ever need. There might come a time when you want to learn to use leaflet in its native form - but mapview is the place to start.
+
+mapview is quick and easy to use and ideal if you want to make a map to share with someone.
+
+```{r}
+
+map_nrsa <- gis_nrsa |>  
+  mapview()
+
+map_nrsa
+
+```
+
+This map may be all you need - particularly if you just need a way to see the data and explore things spatially. To limit the number of variables shown in the dropdown when you click on a point, just select them ahead of time.
+
+You can also visualize a variable as a color or symbol on the map. Other, more advanced controls can be found at:
+
+<https://r-spatial.github.io/mapview/articles/mapview_02-advanced.html>
+
+```{r}
+map_nrsa2 <- gis_nrsa |>
+  select(SITE_ID,Cond,totn,r,ici,iwi,r,P_tol,geometry) |> 
+  mapview(zcol="r",layer.name="Species Richness")
+
+map_nrsa2
+
+```
+
+### Shapefiles
+
+There are a lot of shapefiles on the web - you can download these and use them directly in mapview or ggplot. Or you can read in any shapefile you have on your drive.
+
+Most times, these maps exist as downloadable zipped shapefiles. A really nice workflow to download these (which I found in a 5 minute search) is:
+
+<https://stackoverflow.com/questions/59740419/unzipping-and-reading-shape-file-in-r-without-rgdal-installed>
+
+Shapefiles (and other sf points) can be added to the mapview map with the + sign (like in ggplot)
+
+```{r}
+
+# Create temp files for the downloaded zip and shapefile
+temp <- tempfile()
+temp2 <- tempfile()
+
+# Download the zip file and save to 'temp' 
+URL <- "https://dmap-prod-oms-edc.s3.us-east-1.amazonaws.com/ORD/Ecoregions/us/us_eco_l3.zip"
+
+download.file(URL, temp)
+
+# Unzip the contents of the temp and save unzipped content in 'temp2'
+unzip(zipfile = temp, exdir = temp2)
+
+ecoreg <- sf::read_sf(temp2)
+
+
+map_nrsa3 <- gis_nrsa |>
+  select(SITE_ID,Cond,totn,r,ici,iwi,r,P_tol,geometry) |> 
+  mapview(zcol="r",layer.name="Species Richness")+
+  mapview(ecoreg)
+  
+map_nrsa3
+
+
+```
+
+### ggplot2 Maps
+
+ggplot2 makes nice static maps and has the advantage that you don't need to learn a new grammar.
+
+geom_sf allows you to easily plot an sf object.
+
+Static maps need to start with a basemap. There are myriad shapefiles and lines online - you are free to explore. In my experience, this is much more painful than it needs to be.
+
+If you need a simple static map, us the maps() package
+
+<https://cran.r-project.org/web/packages/maps/maps.pdf>
+
+Resource:
+
+<https://r-spatial.org/r/2018/10/25/ggplot2-sf-2.html>
+
+```{r}
+library(maps)
+
+state_lines <- st_as_sf(maps::map("state", fill=TRUE, plot =FALSE)) |> 
+  filter(ID %in% c("pennsylvania","west virginia", "ohio"))
+
+map_nrsa4 <-
+ggplot(state_lines) +
+  geom_sf(color = "#2b2b2b", fill = "white", size=0.125) +
+    geom_point(data=nrsa_fsh_ls, aes(x=LON_DD83, y=LAT_DD83), size = 3, 
+        shape = 16, color = "#23888EFF")+
+    coord_sf()+
+  labs(title="NRSA sites in WV, PA, and OH",
+       subtitle="2018-19 sampling",
+       x="Longitude",y="Latitude")
+
+
+map_nrsa4 
+
+```
+
+As with any ggplot - you can use symbols, size and color to visualize data in maps. This is done simply by moving the shape, color, or size argument(s) into the aes() call. If you are "mapping" or making the color, size, or shape dependent on a column in your data, this goes inside the aes( ) call. The code below illustrates this with size inside the aes () and shape and color outside that call.
+
+```{r}
+map_nrsa5 <-
+ggplot(state_lines) +
+  geom_sf(color = "#2b2b2b", fill = "white") +
+    geom_point(data=nrsa_fsh_ls, aes(x=LON_DD83, y=LAT_DD83, size=wsareasqkm), shape = 1, color = "#23888EFF")+
+    coord_sf()+
+  labs(title="NRSA sites in WV, PA, and OH",
+       subtitle="2018-19 sampling",
+       x="Longitude", y="Latitude",size="Watershed Area")
+
+map_nrsa5 
+
+
+```
+
+## Equations in Quarto
+
+<https://quarto.org/docs/authoring/markdown-basics.html>
+
+Special characters within plots and tables are handled with a different engine than inline text or equations in quarto. Inline equations and special characters can be written in Markdown.
+
+$$
+x_u-x_d >Z_{(1-\alpha)}*s_{ann}*\sqrt{\frac{1}{n_u}+\frac{1}{n_d}}
+$$ {#eq-example equation}
+
+## Tables with GT
+
+It is important to be able to produce a nice table. GT is a highly functioning table package and should be all you need. Modeled after ggplot2, it is built by layering different aspects of the table.
+
+```{r}
+
+table_nrsa <- nrsa_fsh_ls |> 
+  select(SITE_VIS,FISH_PROTOCOL,Cond,amps,totn,r) |>   gt() |> 
+  tab_header(
+    title = "Sites, electrofishing amperage, and fish numbers and richness ",
+    subtitle = "Wadeable and Boatable NRSA sites from 2018 and 2019") %>% 
+  cols_align(align="left") %>% 
+  cols_label(
+    SITE_VIS = html("Site_Vis#"),
+    FISH_PROTOCOL=html("Sampling Method"),
+    Cond= html("Specific Cond.,<br>&mu;S/cm<sup>2</sup>"),
+    amps = html("amps"),
+    totn = html("Total Fish"),
+    r = html("Richness")) 
+
+
+table_nrsa
+```
+
+We could sort this table by protocol - or maybe it would be best to organize the table a little differently. Tables can get quite complicated - the simpler the better, sometimes.
+
+Note the embedded code for special characters below, in the line starting Cond=.
+
+```{r}
+
+table_nrsa2 <- nrsa_fsh_ls |> 
+  select(SITE_VIS,FISH_PROTOCOL,Cond,amps,totn,r) |>   
+  gt(
+    rowname_col = "SITE_VIS",
+    groupname_col = "FISH_PROTOCOL",
+    row_group_as_column = TRUE
+  ) |>
+   tab_stubhead(label = "Sampling Protocol/Site_Visit") |>
+  tab_header(
+    title = "Sites, electrofishing amperage, and fish numbers and richness ",
+    subtitle = "Wadeable and Boatable NRSA sites from 2018 and 2019") %>% 
+  cols_align(align="left") %>% 
+  cols_label(
+    SITE_VIS = html("Site_Vis#"),
+    Cond= html("Specific Cond.,<br>&mu;S/cm<sup>2</sup>"),
+    amps = html("amps"),
+    totn = html("Total Fish"),
+    r = html("Richness")) 
+
+table_nrsa2
+
+```
+
+### conditionally formatted tables
+
+You can get more out of your table in html by drawing attention to certain values. This can be useful for thresholds, for example. And making a table interactive allows the user to sort the table the way they want it.
+
+Interactivity is accomplished using opt_interactive()
+
+Colors for certain values are defined by data_color(). Note that you use the actual name of the tibble column and not the one you assigned in cols_label. If you do not define a particular palette - GT will assign one.
+
+<https://posit.co/blog/color-coding-your-data-in-gt-0-9-0/>
+
+<https://themockup.blog/static/resources/gt-cookbook.html#conditional-formatting>
+
+```{r}
+
+pal5=c("#3B9AB2FF", "#78B7C5FF", "#EBCC2AFF", "#E1AF00FF", "#F21A00FF")
+
+ 
+table_nrsa3 <- nrsa_fsh_ls |> 
+  select(SITE_VIS,FISH_PROTOCOL,Cond,amps,totn,r) |>
+  mutate(amps=as.numeric(amps)) |>
+  gt(
+   rowname_col = "SITE_VIS",
+#    groupname_col = "FISH_PROTOCOL",
+#    row_group_as_column = TRUE
+  ) |>
+ opt_interactive(use_sorting = TRUE,
+                 use_page_size_select=TRUE)  |> 
+ # tab_stubhead(label = "Sampling Protocol/Site_Visit") |>
+  tab_header(
+    title = "Sites, electrofishing amperage, and fish numbers and richness ",
+    subtitle = "Wadeable and Boatable NRSA sites from 2018 and 2019") %>% 
+  cols_align(align="left") %>% 
+  cols_label(
+    SITE_VIS = html("Site_Vis#"),
+    Cond= html("Specific Cond.,<br>&mu;S/cm<sup>2</sup>"),
+    amps = html("amps"),
+    totn = html("Total Fish"),
+    r = html("Richness"))  %>%
+  data_color(
+    columns = vars(Cond),
+    colors=scales::col_numeric(
+    palette = c(
+        "white", "orange", "red"),
+    domain=c(20,1000))) |> 
+  data_color(
+    columns=amps, 
+    method="auto") |> 
+  data_color(
+    columns=totn, 
+    method="bin",
+    bins=c(0,25,50,100,500,1000),
+    palette ="viridis") |> 
+  opt_stylize(
+    style = 1, 
+    color = 'cyan'
+  ) 
+
+
+table_nrsa3 
+ 
+
+```
+
+## ggplot2
+
+The best reference online is the 3'rd edition of ggplot2: Elegant Graphics for Data Analysis. This is the comprehensive guide to the package in its present form
+
+<https://ggplot2-book.org/>
+
+## Scatterplots
+
+One of the most basic plots is the scatterplot or the xy plot. You want to see one variable's relationship to another. This example will illustrate this plot as well as some basics of ggplot2.
+
+One basic to keep in mind is that you will not get a secondary y axis in ggplot. There are better ways to skin that catfish, and we will illustrate those in the facet section.
+
+```{r}
+
+xy1 <- nrsa_fsh_ls |> 
+  ggplot()+
+  geom_point(aes(x=wsareasqkm,y=r))+
+  labs(title="Fish Species Richness by Watershed Area", subtitle="NRSA 2018-2019 (OH,PA,WV)", x="Watershed Area", y="Fish Species Richness")
+
+xy1
+
+```
+
+### Density Plots
+
+The plot above could benefit from a transform of the x axis. Most streams are small - and when the dataset includes a large range of stream site - the distribution skewed.
+
+One way of looking at this is a density plot. Density plots show the proportion of data at different values.
+
+```{r}
+nrsa_wsaden <- nrsa_fsh_ls |> 
+  ggplot(aes(x=wsareasqkm))+
+  geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8)+
+  ggtitle("Density Plot of Watershed Area")
+
+nrsa_wsaden
+
+
+```
+
+This is a really skewed dataset with a few really large watersheds. It is always a good idea to stop and look what might cause this.
+
+In this case it is easy because we have a dataset that includes data from small wadeable streams to large nonwadeable rivers. To look at as density plot of the wadeable streams only - we can subset them as part of the plot and have a look at it. Or we can make a new tibble of just the wadeable data and plot that.
+
+```{r}
+nrsa_wsaden_wade <- nrsa_fsh_ls |>
+  filter(str_detect(FISH_PROTOCOL,"_WADEABLE")) |> 
+  ggplot(aes(x=wsareasqkm))+
+  geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8)+
+  ggtitle("Density Plot of Watershed Area")
+
+nrsa_wsaden_wade
+
+
+```
+
+That is an improvement to the range on the y axis but the data are far from normally distributed. Now would be a good time to look at the data plotted on a log 10 scale axis.
+
+```{r}
+
+nrsa_wsaden_wade2 <- nrsa_fsh_ls |>
+  filter(str_detect(FISH_PROTOCOL,"_WADEABLE")) |> 
+  mutate(log10wsa=log10(wsareasqkm)) |> 
+  ggplot(aes(x=log10wsa))+
+  geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8)+
+  ggtitle("Density Plot of Watershed Area")
+
+nrsa_wsaden_wade2
+
+```
+
+A big improvement. We will make a wadeable subset for further analysis. Note that this filter does the same thing as the filter using str_detect. This one, though more verbose, is a little more reliable because it is matching exactly.
+
+There are many ways to do this log10 transform. It's also possible to do the log transform right in the ggplot2() call as shown below.
+
+Labels are handled with the labs() function.
+
+#### superscripts and subscripts
+
+We can also add a superscript to the units in the x axis title.
+
+This is done with ggtext() - an add on package to ggplot2. ggtext greatly expands the functionality of text in ggplots - in this case adding a markdown element in the theme call.
+
+<https://wilkelab.org/ggtext/articles/introduction.html>
+
+```{r}
+nrsa_fshls_wade <- nrsa_fsh_ls |> 
+  filter(FISH_PROTOCOL%in% c("LG_WADEABLE","SM_WADEABLE"))|> 
+  mutate(log10wsa=log10(wsareasqkm)) 
+
+xy2 <- nrsa_fshls_wade |> 
+  ggplot()+
+  geom_point(aes(x=log10(wsareasqkm), y=r))+
+  #geom_point(aes(x=log10wsa,y=r))+
+  labs(title="Fish Species Richness by Watershed Area", subtitle="NRSA 2018-2019 (OH,PA,WV)", x="Log<sub>10</sub> Watershed Area (Km<sup>2</sup>)", y="Fish Species Richness")+
+  theme(axis.title.x=element_markdown())
+
+
+xy3 <- nrsa_fshls_wade |> 
+  ggplot()+
+  geom_point(aes(x=log10wsa,y=r))+
+  scale_x_log10()+
+  labs(title="Fish Species Richness by Watershed Area", subtitle="NRSA 2018-2019 (OH,PA,WV)", x="Log<sub>10</sub> Watershed Area (Km<sup>2</sup>)", y="Fish Species Richness")+
+  theme(axis.title.x=element_markdown())
+
+xy4 <- nrsa_fshls_wade |> 
+  ggplot()+
+  geom_point(aes(x=wsareasqkm,y=r))+
+  coord_trans(x = "log10")+
+  labs(title="Fish Species Richness by Watershed Area", subtitle="NRSA 2018-2019 (OH,PA,WV)", x="Log<sub>10</sub> Watershed Area (Km<sup>2</sup>)", y="Fish Species Richness")+
+  theme(axis.title.x=element_markdown())
+
+xy2
+xy3
+xy4
+
+```
+
+#### adding a trendline
+
+#### colors and categories
+
+We can look to see if disturbance - in this case, instream cover, has any effect on this species area relationship
+
+First we will make the instream cover variable into a factor and then fit some lines by category.
+
+Also - another way of saving a column as a factor.
+
+```{r}
+
+nrsa_fshls_wade$INSTRMCVR_COND <- factor(nrsa_fshls_wade$INSTRMCVR_COND,
+                                levels=c("Good",
+                                          "Fair",
+                                          "Poor"))
+xy5 <- nrsa_fshls_wade |> 
+ggplot(aes(log10wsa, r, color=INSTRMCVR_COND))+
+  geom_jitter()+
+  scale_colour_manual(values=c("Good"="#3B9AB2FF", "Fair"="#EBCC2AFF","Poor" = "#F21A00FF", name= "Instream Cover Condition"))+
+  labs(title="Fish Species Richness by Watershed Area", subtitle="NRSA 2018-2019 (OH,PA,WV)", x="Log<sub>10</sub> Watershed Area (Km<sup>2</sup>)", y="Fish Species Richness")+
+  theme(axis.title.x=element_markdown())+
+  stat_smooth(method="lm")
+
+xy5
+
+```
+
+## Facets
+
+Facet plots break a busy plot into multiple plots on a page. There are two types of facet plots.
+
+<https://ggplot2-book.org/facet.html>
+
+As quoted:
+
+facet_grid(): produces a 2d grid of panels defined by variables which form the rows and columns.
+
+facet_wrap(): “wraps” a 1d ribbon of panels into 2d.
+
+Below are two examples of facet_grid
+
+```{r}
+
+xy6 <- nrsa_fshls_wade |> 
+ggplot(aes(log10wsa, r))+
+  geom_point()+ 
+  facet_grid(INSTRMCVR_COND~.) + 
+  theme(strip.text.y = element_text(angle=90),strip.background=element_rect(fill="lightblue", colour="black", size=.25))+
+  labs(title="Fish Species Richness by Watershed Area", subtitle="NRSA 2018-2019 (OH,PA,WV)", x="Log<sub>10</sub> Watershed Area (Km<sup>2</sup>)", y="Fish Species Richness")+
+  theme(axis.title.x=element_markdown())+
+  stat_smooth(method="lm")
+
+xy6
+
+
+#Facets can be re-ordered from top to bottom to L to R - not that you would particularly want to in this case.  The former facet is a better plot.
+
+xy7 <- nrsa_fshls_wade |> 
+ggplot(aes(log10wsa, r))+
+  geom_point()+ 
+  facet_grid(.~INSTRMCVR_COND) + 
+  theme(strip.text.y = element_text(angle=90),strip.background=element_rect(fill="lightblue", colour="black", size=.25))+
+  labs(title="Fish Species Richness by Watershed Area", subtitle="NRSA 2018-2019 (OH,PA,WV)", x="Log<sub>10</sub> Watershed Area (Km<sup>2</sup>)", y="Fish Species Richness")+
+  theme(axis.title.x=element_markdown())+
+  stat_smooth(method="lm")
+
+xy7
+
+
+```
+
+## Boxplots
+
+Boxplots are a handy way to show data and compare groups. There is a lot online - see the ggplot cheatsheets.
+
+### Jittered boxplots
+
+While busy, jittered boxplots add a lot to a boxplot and allows for a deeper visualization than a vanilla boxplot. It also gives a better idea of sample size. This may not work that well for very large datasets.
+
+When jittering a boxplot, it important to supress showing the boxplot outliers (outlier.shape=NA), as those will be plotted as points in the jitter and will result in overplotting.
+
+The order of factors on the x axis is very important in boxplots - set the order of factors explicitly prior to plotting and only plot those groups that are important (In this case we will not plot those sites that are unassessed).
+
+#### factor relevel
+
+We can use fct_relevel() in the ggplot() plot call to reorder a factor in a specific order.
+
+```{r}
+
+#This is an example - but for illustration I would rather plot the Fish MMI value on the y axis, but since that apparently wasn't published, I will use a covariate - Tolerant fish richness.
+
+#Poor sites should have higher numbers of tolerant fish than fair site which in turn should have higher numbers than good sites.  Accordingly, put the boxplots in that order prior to plotting.  
+
+# Intead of reordering the factor as we did befor, this can also be done right in the plot call using fct_relevel (from forcats).
+  
+
+pl1 <- nrsa_fsh_ls |> 
+  filter(!FISH_MMI_COND=="Not Assessed") |> 
+  filter(!is.na(FISH_MMI_COND)) |> 
+  mutate(FISH_MMI_COND = fct_relevel(FISH_MMI_COND, 
+            "Poor", "Fair", "Good"))  |> 
+ggplot(aes(FISH_MMI_COND, R_tol))+geom_boxplot(outlier.shape = NA)+
+  geom_jitter()+
+  ggtitle("NRSA data Region 1,2,3")+theme(plot.title = element_text(size = 18,face="bold"))+
+  ylab("Number of Tolerant Species")+
+  theme(axis.title.y=element_text(size=14),
+        axis.title.x=element_text(size=14),
+        axis.text.x = element_text(size=8,angle=0))
+  xlab("Disturbance Category")
+  
+pl1
+
+
+```
+
+### bubble boxplots
+
+While these plots can get busy for the uninitiated, they are handy to explore covariates. All we are doing is taking a jittered boxplot and mapping the dots to different covariates.
+
+It is better to use something like size of dot (or bubble) for an actual number or size (e.g., watershed area), and color for categorical variables. This is done in the aes() call for the geom_jitter.
+
+## complete themes
+
+You can control the look of the entire plot with themes.
+
+<https://ggplot2.tidyverse.org/reference/ggtheme.html>
+
+```{r}
+
+pl2 <- nrsa_fsh_ls |> 
+  filter(!FISH_MMI_COND=="Not Assessed") |> 
+  filter(!is.na(FISH_MMI_COND)) |> 
+  mutate(FISH_MMI_COND = fct_relevel(FISH_MMI_COND, 
+            "Poor", "Fair", "Good"))  |> 
+ggplot(aes(FISH_MMI_COND, R_tol))+geom_boxplot(outlier.shape = NA)+
+  geom_jitter(aes(size=wsareasqkm))+
+  theme(plot.title = element_text(size = 18,face="bold"),
+        axis.title.y=element_text(size=14),
+        axis.title.x=element_text(size=14),
+        axis.text.x = element_text(size=8,angle=0))+
+  labs(title="NRSA data Region 1,2,3",xlab="Disturbance Category",ylab="Number of Tolerant Species", size="Watershed<br>Area(Km<sup>2</sup>)")+
+  theme(legend.title = element_markdown()
+  )
+  
+  
+pl2
+
+pl2_1 <- pl2+
+  theme_classic()+
+  theme(legend.title = element_markdown()
+  )
+  
+
+pl2_2 <- pl2+
+  theme_grey()+
+  theme(legend.title = element_markdown()
+  )
+
+pl2_3 <- pl2+
+  theme_dark()+
+  theme(legend.title = element_markdown()
+  )
+
+pl2_1
+pl2_2
+pl2_3
+
+```
+
+## Violin Plots
+
+Violin plots combine the information from a boxplot with a better visualization of the distribution. Outliers are not shown as such in violin plots, so there is no need to worry about overplotting them here.
+
+```{r}
+
+pl3 <- nrsa_fsh_ls |> 
+  filter(!FISH_MMI_COND=="Not Assessed") |> 
+  filter(!is.na(FISH_MMI_COND)) |> 
+  mutate(FISH_MMI_COND = fct_relevel(FISH_MMI_COND, 
+            "Poor", "Fair", "Good"))  |> 
+ggplot(aes(FISH_MMI_COND, R_tol))+
+  geom_violin()+
+  geom_jitter(aes(size=wsareasqkm))+
+  theme(plot.title = element_text(size = 18,face="bold"),
+        axis.title.y=element_text(size=14),
+        axis.title.x=element_text(size=14),
+        axis.text.x = element_text(size=8,angle=0))+
+  labs(title="NRSA data Region 1,2,3",xlab="Disturbance Category",ylab="Number of Tolerant Species", size="Watershed<br>Area(Km<sup>2</sup>)")+
+  theme(legend.title = element_markdown()
+  )
+  
+  
+pl3
+
+
+```
+
+## Correlation Matrix
+
+Viewing covariates in a matrix makes it easier to see and to explain which are correlated. Usually this is done to winnow down explanatory or what are supposed to be independent variables. This can also be done with metrics or dependent variables. It is always handy to view what is related to what.
+
+I find it helpful to view these within classes - for example, within an ecoregion or within some other class that makes sense ecologically or methodologically.
+
+There are a few ways to compute a correlation matrix and a few ways to visualize them. Base r uses cor() and the Hmisc package uses rcorr().
+
+cor() will give correlation coefficients. cor_pmat in ggcorrplot will give p values corr.mtest() in the corrplot package will give p values and 95% confidence intervals
+
+Visualizing can be done with corrplot() in corrplot package or in the ggcorrplot() in ggcorrplot.
+
+Correlation visualization is just dangling the toes into multivariate analyses (PCA and the like), all of which can be done in R.
+
+To prep your data for the correlation analysis - include SITE ID as the rownames. This is helpful if you move forward with other multivariate analyses.
+
+You must specify use="complete.obs" if you have any NA values at all in your data frame.
+
+As with everything in r - ggcorrplot gives the user a lot of options for color and style.
+
+```{r}
+
+nrsa_lsc <- nrsa_fsh_ls |> 
+  filter(str_detect(FISH_PROTOCOL,"WADEABLE")) |> 
+  select(SITE_ID,starts_with("pct"),Cond,ici,iwi) |> 
+  column_to_rownames("SITE_ID")
+  data.frame(row.names = 1)
+
+lsc_corr <- round(cor(nrsa_lsc,use = "complete.obs"), 2) # corr. coeff,
+lsc_p.mat <- cor_pmat(nrsa_lsc,use = "complete.obs") #corr. p values
+
+lsc_corr_p <- ggcorrplot(lsc_corr, 
+           method = "circle",  #"square" (default)
+           #type = "lower", 
+           colors = c("red", "white", "green"),
+           lab = TRUE, #Add corr. coef.
+           p.mat = lsc_p.mat,
+           insig = "blank")
+
+lsc_corr_p
+
+```
+
+## Heatmap
+
+Sometimes you want to look at variables in relation to one another and along a gradient. This is where a heatmap might come in handy.
+
+For this example, we'll look at the handful of fish metrics in relation to watershed area. It is easier for me to interpret heatmaps if the scale is the same for all the variables. So making a few different heatmaps may work better than a single heatmap with all variables thrown in.
+
+Heatmaps can include clustering with a dendrogram. This isn't that. This is a simple visualization based on the gradient of one variable. To do this, the data will need to be in Long Form.
+
+#### reorder axis ggplot
+
+It is handy that ggplot has a way to reorder a variable on an axis based on a different variable. If we used watershed area on the y axis - the scale would be wrong (and we aren't really looking at these metric values vs watershed area). The solution is to order the sites by watershed area.
+
+reorder() will order the first variable, by the second variable listed. If you throw in a - sign, it'll reverse the order.
+
+Use element_blank because the name of the site is meaningless.
+
+```{r}
+
+mets_hm <- nrsa_fsh_ls |> 
+  filter(str_detect(FISH_PROTOCOL,"WADEABLE")) |>
+  select(SITE_ID,wsa=wsareasqkm,starts_with("P_")) |> 
+  pivot_longer(!SITE_ID:wsa,names_to="mets",values_to="metval")  
+
+mets_hm_p <- mets_hm |> 
+  ggplot()+
+  geom_tile(aes(x=mets,y=reorder(SITE_ID,wsa),fill=metval))+
+  theme(axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+         axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5),
+        legend.title=element_markdown())+
+    labs(title="Proportion metrics ordered by increasing watershed area",x="Metrics", y="", fill="Metric<br>value")
+  
+
+mets_hm_p
+
+```

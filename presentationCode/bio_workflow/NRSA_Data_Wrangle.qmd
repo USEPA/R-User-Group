@@ -1,0 +1,746 @@
+---
+title: "NRSA_R"
+execute: 
+  echo: true
+  warning: false
+  message: false
+author: LR,NS
+format: 
+  html:
+    embed-resources: true
+    toc: true
+    toc-depth: 3
+knitr:
+  opts_chunk:
+    out.width: "100%"
+editor: visual
+---
+## Note
+You can render this entire code into an html, if that is helpful.  As some of the code chunks rely on outside connections - you may have to add 
+eval=FALSE to the chunk {r, eval=FALSE} if it stops working.  For example - the chunk at the bottom that runs nhdPlus tools can be problematic if NHDplus is down at the time you are tyring to render a document.
+
+## Disclaimer
+
+The views expressed in this code do not represent the views or the policy of EPA and no part of this code or presentation should be considered an endorsement by EPA.
+
+## Using R to download and wrangle NRSA data
+
+What follows is code - or workflows - that may be useful to download and analyze environmental datasets. This code is a cookbook more than a lesson or class. The R-Project for statistical computing (https://www.r-project.org/) defines R as "...a free software environment for statistical computing and graphics". R does have a rather steep learning curve. But, because R is free, there are many resources available from enthusiasts to governments and non-profits that use it.
+
+R Studio is an IDE - Integrated development environment for R. It's a place from which you can run R code.
+
+The appearance of R Studio can be customized using Tools/Options menu. My R studio may look much different than yours - adjust it to your preference.
+
+<https://support.posit.co/hc/en-us/articles/200549016-Customizing-the-RStudio-IDE>
+
+Posit is the company that developed RStudio. Posit and RStudio are used interchangebly on the web.
+
+Cheatsheets are always helpful in that they very succinctly present most of what you need in one place (I never figured out why that is considered a cheat). If there is a package, there is probably a cheatsheet - I keep these onhand and they are invaluable while you learn, and you are always learning.
+
+<https://posit.co/resources/cheatsheets/>
+
+The important ones for these workflows are at the bottom of the list:
+
+readr, tidyr, dplyr, ggplot2
+
+## R Resources
+
+As noted and linked throughout - there are a lot of resources available on the web. A comprehensive guide is the 2'nd edition of R for Data Science. This is available free on line at:
+
+<https://r4ds.hadley.nz/>
+
+## Downloading packages and loading libraries.
+
+### install pacman
+
+Please install the pacman package first to run this code. This can be done in the Install package button of the Packages tab in the lower right section of of R studio.
+
+pacman is a package to download and load packages.
+
+<https://trinker.github.io/pacman_dev/vignettes/pacman_functions_quick_reference.html>
+
+This can be useful because you may need to download packages when you update R and this just makes it easier for. After you run this for the first time - you can comment it out.
+
+If you want a deep dive into what a package actually is, there is a great free online resource for that:
+
+<https://r-pkgs.org/>
+
+Everyone should at least read the introduction...
+
+<https://r-pkgs.org/introduction.html>
+
+Tidyverse package brings loads the following packages: ggplot2, tibble, tidyr, readr, dplyr, stringr, purr, and forcats.
+
+You will also note another package that resolves problems when 2 packages use the same commands or "verbs". conflicted is a package that allows you to prefer one package's verbs over another's. There is also a way to do this without a package by typing the package you want directly into code like this:
+
+*dplyr::filter()*
+
+Using the conflicted package and specifying upfront that I prefer the dplyr implementation of *filter*, then it saves me from typing *dplyr::* every time I filter. Doing this upfront, after your library call, keeps is all more clear and in one place so that someone reading your code can see what you've done.
+
+### here
+
+I am also using the here package to try and circumnavigate all of the agita over setting the working directory in the correct way for a cookbook like this. Hopefully it works for you - I have been using it and I like the way it works - though it took some getting used to.
+
+## Installing packages from github
+
+Sometimes packages are only available in development on github. Or - to get the latest and greatest freatures that are not yet available in a new version of a package, you will need to load the version in development from Github
+
+## Commenting and Uncommenting lines.
+
+The pound (#) sign is used in R to write a comment in your code. Once commented, that text will not run as code. Use comments to keep parts of code for future use or to tell your future self and others what you did. Be verbose - anything that makes code more clear is a good idea to comment.
+
+To easily comment/uncomment - highlight the lines to be commented and go to Code/ Comment/Uncomment Lines (ctrl+shift+c)
+
+Uncomment the three lines at the bottom of this code chunk this code chunk and run them. This will install streamcat. You can then comment them back again after installing the package. You will need to respond to the question of upgrading packages.
+
+```{r}
+
+#
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(here,conflicted,tidyverse,gt,readxl,writexl,viridis,markdown,knitr,lubridate,ggthemes,janitor,leaflet,sf,mapview,tibbletime,nhdplusTools)
+
+library(here)
+library(conflicted)
+library(tidyverse)
+conflict_prefer("filter", "dplyr")
+conflict_prefer("select", "dplyr")
+conflict_prefer("group_by", "dplyr")
+conflict_prefer("ungroup", "dplyr")
+library(gt)
+library(readxl)
+library(writexl)
+library(viridis)
+library(markdown)
+library(knitr)
+library(lubridate)
+conflict_prefer("year", "lubridate")
+conflict_prefer("month", "lubridate")
+library(ggthemes)
+library(janitor)
+library(leaflet)
+library(sf)
+library(mapview)
+library(tibbletime)
+library(reactable)
+library(htmltools)
+library(nhdplusTools)
+
+# Install StreamCat
+# install.packages(remotes)
+# library(remotes)
+# remotes::install_github("USEPA/StreamCatTools", build_vignettes=TRUE)
+
+library(StreamCatTools)
+
+```
+
+## Terminology and Basics
+
+Before we load data and start wrangling it, there are a few basics and a brief compendium of the structure of environmental data that should be reviewed. As with everything in this code - feel free to skip ahead if you already know this, or you have your own ideas that you prefer. There are a lot of verbs that are used to describe the work we do to get data into a form that we can analyze - transform, wrangle, manipulate, etc. What matters is that data rarely comes ready to plot - or tabulate - or analyze statistically. Wrangle doesn't connote that we have changed the data in any way - only that we get it under control and understand it.
+
+First, a few terms to help us wrangle environmental data. These are terms that are used here that will help keep things under control and understandable. At each point down in the hierarchy, data (or rows of information) proliferates.
+
+### Site
+
+When we collect a sample or data, we do so at a place. This place has a location, described by a latitude and longitude and by an assigned Station or Site Identifier or Site_ID. (The term Site is used in this code but you might see names like Station). If this place changes - or moves - it is a new site. This is scale dependent and can mean a 100 meter reach or a particular riffle in a stream, but for our purposes, it is a unique place that is sampled.
+
+### Sample
+
+This is data that is collected on a particular date (or datetime) at or within a Site or Station and each sample must have a unique identifier or Sample_ID. This sample is described by the Date that it was sampled. In most cases, a date will be sufficient to describe a sample, but in the case of timed composites, or replicates of macroinvertebrate data collected in the same riffle, Datetime might be necessary.
+
+A subset of the samples are replicates or duplicates. We use the term replicate so that we can distinguish these from duplicates which we often see in data as mistakes (though you will often see the two terms used interchangeably). Replicates are usually prescribed at 10% of samples - so for 10% of the samples there will be two samples collected on a particular date at the same site. Depending on the data management rubric - these may have unique names or not, sometimes its up to us to figure that out. In terms of the NRSA data - Replicates are collected at the same site within a month - so the date is always different for replicates.
+
+Sites are unique. There can be more than one sample per site. Each sample is unique from other samples but relate to a particular site. It is good practice for these names to also be unique, but you may see data where Sample_ID repeats and the only way it is unique is by concatenation with Site_ID (e.g., Each unique Site 1,2,3 has a sample 01,02,03,... and the unique Sample_ID would be 1_01,1_02, 1_03, 2_01, etc ).
+
+### Site Info
+
+Sites may have many descriptors in addition to latitude and longitude. For example - State, County, HUC Watershed, Ecoregion, etc. Each unique row is described by many columns. This data will proliferate quickly when adding GIS data to the project. Each unique site may be described at the watershed and catchment scale with dozens to hundreds of variables collected at different points in time.
+
+### Sample Info
+
+This will be information about the particular sample collected. The more types of samples that are collected, the more complicated this gets. These are best kept separately by which sample it describes - for example, bug_sample_info, fish_sample_info, water_sample_info, etc. This info will relate to the unique Sample_ID.
+
+### Raw Data
+
+To distinguish raw data from the information on Sites and Samples, this is the data itself, at its most distinct. For purposes of this code example, this is information describing a particular taxon or fish. Each row of data is a distinct species caught in a particular sample at a particular site. Each taxon may be described by many columns such as minimum Length, maximum length, and total number or numbers within particular size classes.
+
+This will vary by study or project. The raw data may actually be at the scale of the individual. Each individual fish may be measured and or weighed. Sometimes the raw data is some combination of this, where there is summary information per taxon as I described previously and for a subsample or subset of the individuals, more data was collected. This is often the case for fish that might be sampled for fish tissue. We may have collected data on both the fish assemblage (as described above) and individuals (the length and weights) of a fish tissue composite. Most of the time these data will be kept as two separate tables.
+
+It is imperative to figure this out prior to your analysis. Make sure you know what the raw data is and how it relates to the sample.
+
+This raw data will be available for critters (most commonly by genus or species, but could be any taxon), chemistry (by chemical), or habitat (by metric).
+
+The habitat data may proliferate past this point as well as it can be available as transect or point data from within a sample within a site.
+
+Chemical data may be available as field chemistry or lab chemistry. Field chemistry is usually collected at each site for parameters commonly measured by sondes - pH, Conductivity, and Dissolved Oxygen. The lab chemistry may be for any number of parameters that are analyzed in a laboratory.
+
+### Taxonomic Info
+
+The table used to describe taxa is usually refered to as a Master_Taxa_List (MTL). The MTL describes the unique taxa that may be present in the data. This may be unique Species but are often Genus (particularly for macroinvertebrates), in some cases Family (some macros may only be identified to Family), or any other grouping that may be used (tribe, sub-genera, etc.). If there is a row of raw data, that particular taxon must appear in the Master_Taxa_List. For each particular row in the MTL there may be many columns used to describe it (e.g., Tolerance Value, Feeding Guild, Spawning Guild, etc.)
+
+### Databases
+
+As you can tell from the above - if your project or program collects this type of data, it might best be housed in a database with a dedicated data manager who understands all the relationships within the data. Whether or not you need a relational database (e.g., MS Access) to do that depends on how much and how many different types of data you have.
+
+### Importing data into the R Environment
+
+There are many options here - R can directly access online databases or a relational database like the one you may already have. Or it can import text, csv, excel, or many other file types.
+
+Have a look at the readr cheatsheet
+
+<https://rstudio.github.io/cheatsheets/data-import.pdf>
+
+This will cover about all of the most common ways to import data. We will be using a public facing dataset available on the web for our example in this code.
+
+### Second Disclaimer
+
+The analyses and plots shown in this code are not what the National Rivers and Streams Assessment (NRSA) data was designed to do. We are only using this dataset as a toy example to illustrate the tools available in R, not as an actual analysis of the NRSA data.
+
+All of the data from NRSA assessments can be found (at the time of this writing) at:
+
+<https://www.epa.gov/national-aquatic-resource-surveys/data-national-aquatic-resource-surveys>
+
+### Data download problems
+
+Reading in data can be a pain at times. For instance, sometimes column names in downloaded files can cause problems - in this case, using read.csv instead of read_csv, and including the bit about check.names=F, made R a bit dumber which is what was called for in this import.
+
+Solving this, like all problems in R, is a trial and error process. A good place to start is to copy the entire error message out of the console and into a search engine. You will be amazed how many times that will solve your problem in under 5 minutes.
+
+When using packages like readr or readxl, it is important to pay attention to the warnings that are thrown in the import. The import function will make certain decisions that you may not agree with - converting numbers to character fields, etc. It is important to make sure the import worked properly.
+
+```{r}
+
+
+nrsa1819_sites <- read_csv("https://www.epa.gov/system/files/other-files/2023-01/NRSA_1819_SiteInfo.csv")
+
+nrsa1819_fshinfo <-
+read_csv("https://www.epa.gov/system/files/other-files/2022-03/nrsa-1819-fish-sampling-information-data.csv")
+
+nrsa1819_fshdat <- 
+read_csv("https://www.epa.gov/system/files/other-files/2022-03/nrsa-1819-fish-count-data.csv")
+
+#Reading in data can be a pain at times.  For instance, sometimes column names in downloaded files can cause problems - in this case I replaced read_csv with read.csv, and included the bit about check.names=F...this made R dumber which is what was called for - Many times its a trial and error process.  
+nrsa1819_fchem <- 
+read.csv("https://www.epa.gov/system/files/other-files/2023-01/NRSA_1819_field_wide.csv", check.names = F)
+
+#This is an older traits table but it'll do for this example
+nrsa1314_traits <- 
+read_csv("https://www.epa.gov/sites/default/files/2019-04/nrsa1314_fishtaxa_02042019.csv")
+
+#It is always important to grab the metadata along with the traits - columns are always abbreviated and explantation is necessary.
+
+nrsa1314_traitsmeta <-
+read_delim("https://www.epa.gov/sites/default/files/2019-04/nrsa1314_fishtaxa_meta_04292019.txt")
+
+nrsa1819_disturb <-
+  read_csv("https://www.epa.gov/system/files/other-files/2023-11/nrsa1819_data_for_populationestimates.csv")
+
+```
+
+### Dataframes, Tables, Tibbles, and Subsets
+
+What do we call these data over in the Data Environment pane? Dataset, Datatable, Dataframe, Tibble?
+
+readr returns a tibble. A tibble is a less opinionated form of a dataframe and is a tidyverse construct. While there are differences between dataframes and tibbles, you can suss that out on your own.
+
+<https://r4ds.had.co.nz/tibbles.html>
+
+Using readxl on very large excel spreadsheets can lead to problems if there are a lot of NA values. In this case, it is prudent to set guess_max to a very large number (the default is 1000, you might try 10x that or 10,000) if the first 1000 rows may be an NA value.
+
+Tibbles may be handy and may work well in the tidyverse - but if you are using a different package - it may cause problems or conflicts. If you run into problems, try converting the tibble to a dataframe using
+
+yatta \<- as.data.frame(yatta)
+
+## Looking at Data
+
+There are many ways in R and R Studio to examine a dataframe or tibble.
+
+## Scientific Notation
+
+Just a note - if your data contains scientific notation (this data does not) and that bothers you, turn it off globally by running
+
+options(scipen=999) turns it off. options(scipen=0) turns it back on
+
+```{r, results = FALSE}
+options(scipen=999)
+
+#For when you need to see the names of the columns
+names(nrsa1819_fshinfo)
+
+#For when you need that list without quotes
+cat(names(nrsa1819_fshinfo))
+
+#Glimpse
+glimpse(nrsa1819_fshinfo)  
+  
+```
+
+While all of these are fine ways to look at your data - R Studio has convenient ways to load the data in a viewer and also to look at the names and types of columns in the Data Environment.
+
+## Objects
+
+Everything in R is an object.
+
+When examining the data, we saw that the column types are either
+
+*chr* *dbl* *num* *lgl*
+
+As noted above, readr guesses at the column type. Most times it is a good guess - sometimes it isn't. We need to at least look over the columns that we'll be using and convert them to the proper type
+
+R handles numeric data either as an integer or a double precision floating point number. You don't really need to know this, but that is what dbl stands for.
+
+## lubridate
+
+In this case we'll need to convert a few things using lubridate. lubridate was created to make conversion from and to different type of Datetime data. Its functions are easy to use.
+
+<https://r4ds.hadley.nz/datetimes.html>
+
+It is not the only package in R that will do this.
+
+see for an exhaustive list:
+
+<https://cran.r-project.org/web/views/TimeSeries.html>
+
+```{r}
+#In R, to work with a particular column, you will use a $ to denote it
+
+#There are two ways to do this conversion - 
+# 1. overwite DATE_COL with the new format
+# 2. make a new column with the new format
+
+#the mdy function in lubridate converts to month-day-year format.
+
+nrsa1819_fshinfo$DATE_COL <- mdy(nrsa1819_fshinfo$DATE_COL)
+
+```
+
+## dplyr
+
+Tools to wrangle your data.
+
+-   *filter* specific rows
+
+-   *select* columns
+
+-   *arrange* - sort
+
+-   *mutate* - make new columns
+
+## Pipe Operator
+
+A pipe loosely means "and then" in the flow of code. Pipes originated as a function in the magrittr package and is typed %\>% with a keyboard shortcut of ctrl\>SHIFT\>M Base R has since added the pipe operator \|\> using the same shortcut. If you want to use base R pipe with the shortcut, set this in one of the Tools\>Global Options\>Code\>Editing checkboxes
+
+You will see both of these pipe shortcuts on the web and this is mentioned only to avoid confusion - they can be used interchangeably in the same code, for now.
+
+## Column Names
+
+Names of Columns can be tricky. All of these are great, designed by actual data analysts. Sometimes data coming from spreadsheets will be ridiculously long or will have parentheses or dashes in them. Spaces are also a really bad idea for column names as sometimes two spaces are accidentally typed, which can wreak a bit of havoc.
+
+When there are illegal characters in the name (spaces, parentheses, etc.), you must use the single back quote to include this name in select or filter or any other code. For example:
+
+`goofy name (mg/l)`
+
+This tells R that there is a column name in there.
+
+There is no end to help on the internet for *select* and *filter*. Look on the cheatsheets. Do not forget the select helper functions - particularly useful are:
+
+*starts_with* for including all column names with a particular prefix
+
+*everything* for including all the rest of the columns
+
+### operators
+
+If you are new to R, you will have to get used to different operators. Look at the cheetsheets. These are very important to get right in filters. The most common ones we will use all of the time are ! NOT (!= NOT EQUAL) == EQUAL TO \| OR & AND %in% asks if quoted strings are a in a column
+
+```{r}
+#As you can see, you can change the name of a column at the same time as selecting it.  Its a good idea to grab everything you may need.  Not a bad time to use cat(names) and cut and paste.
+
+cat(names(nrsa1819_fshdat))
+fshdat_states <- nrsa1819_fshdat |> 
+  select(SITE_ID,VISIT_NO,STATE,FINAL_NAME,count=TOTAL,NON_NATIVE) |> 
+  filter(STATE %in% c("OH", "PA", "WV"))
+
+```
+
+## Joins
+
+If you have worked with databases you will have joined data - we will use left_joins here as they are simple and straightforward. left_joins keep everything on the left hand table (the first table in the join call) and then only the records in the right hand table that match.
+
+The match is accomplished with the "by" call and is very important and critical to get correct. Look closely at both tables - these are the columns that are common to both tables. These are the columns by which the tibbles will be matched. You must include all the columns that are common to both tables in the "by" call, or eliminate them from the join in the select call. If there are no columns that are unique identifiers, the columns included in the "by" call will make them unique. For example here we use SITE_ID and VISIT_NO.
+
+You can combine select with join to only join a given number of columns of the second table. To just join all columns, eliminate the select call.
+
+Alternatively, you can make a subset of nrsa1819_fshinfo that includes (selects) the columns that you want and join that subset to fshdat_sub.
+
+You can get joins wrong probably more often than any other operation in R (This isn't unique to R - it is easy to get joins wrong in Access as well). After making the join - have a look at the resulting tibble. Does it make sense? Is it what you wanted? Do the number of columns add up mathematically? This is often the point at which duplicate data becomes apparent. It is important to track this down and figure it out. Don't rush through joins.
+
+You can rename this tibble and make a new dataframe or use the same name to overwrite the table. New tables are preferable, particularly with joins. While this can proliferate data - it usually makes things more clear and easier to check your work down the line.
+
+As mentioned, the web is great resource to help explain what these functions do. The following is a very useful explanation for joins and what they do:
+
+<https://www.garrickadenbuie.com/project/tidyexplain/>
+
+```{r}
+
+#uncomment this and run it to get an unquoted list of column names.
+#cat(names(nrsa1819_fshinfo))
+
+
+fshdat_states1 <- fshdat_states |>
+left_join((select(nrsa1819_fshinfo,SITE_ID,VISIT_NO,DATE_COL,FISH_PROTOCOL,amps=PRIM_AMPS,Cond=CONDUCTIVITY)),by=c("SITE_ID","VISIT_NO"))
+
+```
+
+## mutate
+
+There are many ways to make new tables. Joining is one way. We can also just add columns to an existing table by using mutate. This column might be the result of a mathematical operation or a logical one.
+
+If you want to deep dive into mutate and group_by and summarize - check out this link:
+
+<https://www.andrewheiss.com/blog/2024/04/04/group_by-summarize-ungroup-animations/>
+
+## group_by
+
+The group_by function can be used when mutating columns or summarizing data.
+
+### ungroup()
+
+It is good practice to ungroup when finished with the mutate or summarize so that the resulting tibble is free to be grouped anew.
+
+Notice below that in this dataset - there is no unique ID from which to group - unique samples can only be had by combining SITE_ID with VISIT_NO. We can either do this by creating a new column with this unique combination, or by including both columns in the group_by function. Both methods are illustrated.
+
+The group_by used with mutate is conservative - it keeps all the rows and adds information from the mutate in a new column.
+
+```{r}
+
+#We can just group_by both variables that make that row unique.
+# Alternatively, We can create a unique variable and group_by that variable.  This could come in handy later.  paste0 just concatenates without adding any spaces to the name.  The underscore is the least confusing option for a separator.
+
+#We are summing the number of fish as totn and calculating proportions as prop.
+
+#NOTE - The variable name is NOT quoted in the group_by call
+
+fshdat_states2 <- fshdat_states1 |>
+  mutate(SITE_VIS=paste0(SITE_ID,"_",VISIT_NO)) |> 
+  group_by(SITE_VIS) |> 
+  mutate(totn=sum(count),prop=(count/totn),r=n()) |> 
+  ungroup()
+  
+#Notice that the second bit of code overwrites the first bit because the tibbles are named the same.
+  
+```
+
+## summarize/summarise
+
+Both spellings work. Using summarize is destructive in that it returns a summary - less rows of data. This is no longer raw data. There is a lot on the web about dplyr summarize, and the methods used have recently evolved.
+
+```{r}
+###Summary table of species richness
+
+rich <- fshdat_states2 |> 
+  group_by(SITE_VIS) |> 
+  summarize(sprich=n())
+
+###If you want more column descriptors in the table - they must be specified in the group_by call.  Note that just like mutate - one can just summarize more than one 
+
+rich <- fshdat_states2 |> 
+  group_by(SITE_VIS,STATE,DATE_COL) |> 
+  summarize(sprich=n(),totn=sum(count)) |> 
+  ungroup()
+
+```
+
+## Building a summary
+
+### Joining to a Master_Taxa_List or Traits Table
+
+This is an example workflow that builds a group of metrics from raw data and a Master Taxa List. This works smoothly because both the data and the traits list come from the same organization. If you join them to a traits table that might not have the same fish names, it might be more work to join.
+
+This is a tiny example. Sometimes there will be dozens of corrections to be made to make these two tables match. Slowly and methodically this can be done. The important thing is - don't just join things and assume it worked. I've seen everything from updated nomenclature to mis-spellings to double spaces between names (two spaces instead of one will cause a mismatch). Take the time to check it out thoroughly.
+
+There are a couple tools that will help with this.
+
+See Filtering Joins - it is advisable to read this in its entirety to become familiar with joins
+
+<https://dplyr.tidyverse.org/articles/two-table.html#filtering-joins>
+
+As described in the weblink:
+
+Filtering joins match observations in the same way as mutating joins, but affect the observations, not the variables. There are two types:
+
+semi_join(x, y) keeps all observations in x that have a match in y. anti_join(x, y) drops all observations in x that have a match in y.
+
+dplyr::case_when and ifelse - helps to re-code data. <https://dplyr.tidyverse.org/reference/case_when.html>
+
+<https://dplyr.tidyverse.org/reference/if_else.html>
+
+stringr package - This is an entire package dedicated to working with strings which is a field that contains a character or groups of characters.
+
+<https://stringr.tidyverse.org/>
+
+```{r}
+
+fsh_miss <- fshdat_states2 |> 
+  select(FINAL_NAME) |> 
+  distinct() |> 
+  anti_join(select(nrsa1314_traits,FINAL_NAME), by="FINAL_NAME")
+
+#Besides the hybrid and unknown - there are two species that need to be "fixed" for this traits list to work (and this is a small number).  If there are misspellings, this is good to change or fix in the raw data.  Because these are two legitimate species (or a species and a subspecies), this might be a good place to change the FINAL_NAME in the traits to accommodate the fish data.
+
+traits <- nrsa1314_traits |> 
+  mutate(FINAL_NAME=case_when(FINAL_NAME=="PEARL DACE"~"ALLEGHENY PEARL DACE",
+         TRUE~FINAL_NAME))
+
+#You must include the TRUE~FINAL_NAME to bring in all the rest of the data that are not PEARL DACE.  
+
+#Because Longear Sunfish exist in the dataset - changing the name in the Traits Table won't cut it.  The best we can do is copy over Longear for the Northern Sunfish row (quite likely the traits are the same).
+
+nsf <- traits |> 
+  filter(FINAL_NAME == "LONGEAR SUNFISH") |> 
+  mutate(FINAL_NAME = case_when(FINAL_NAME == "LONGEAR SUNFISH" ~ "NORTHERN SUNFISH"))
+
+#Maybe you will want to join this to a traits data by scientific name, and the all caps format throws things off.  Stringr can help with this.
+
+traits_fin <- traits |>
+  bind_rows(nsf) |> 
+  select(FINAL_NAME,FAMILY,GENUS,SPECIES,TEMP_NRSA,TOLERANCE_NRSA,TROPHIC_NRSA) |>
+  mutate(Genus=str_to_title(GENUS),
+         species=str_to_lower(SPECIES)) |> 
+  unite("Sci_name", Genus,species,sep=" ")
+
+
+```
+
+## Pivot Data
+
+Long and Wide Data.\
+Most data is a combination of long and wide. Data can often be pivoted longer depending on the columns chosen to pivot. This is very similar to pivot tables in excel.
+
+In this example we will first pivot longer
+
+### pivot_longer
+
+### pivot_wider
+
+A note on hybrid fish and unknowns. This dataset has a few hybrids and unknowns listed. If your dataset has many hybrids, and they are important, make sure they are adequately described in the master taxa list and treat them as a species. If you have many unknowns then you either have to collect better specimens, ignore yoy fish when sampling, or improve your id skills. In this example, we'll just delete them from the working dataset and introduce another handy tool in the process,
+
+## NA handling
+
+A little about na handling. These three are helpful
+
+filter(!is.na(colname)) - deletes NA rows for a particular column or columns
+
+replace_na(list(colname=,colname=)) - replaces NA with values or text
+
+na_if() - replaces values or text with NA
+
+## Computing Metrics
+
+### Recode metrics
+
+We can put all of these tools together in an example of computing metrics.
+
+One way to compute metrics to re-code the master taxa list with 1 or 0. Then computing abundance or richness metrics is straightforward. This is a short example of a re-coded Metrics database. These can be much larger - this is a short example.
+
+Metrics can be any trait or taxonomic grouping you imagine might be affected by stress. I the example below we will look at fish classified as cold, cold/cool, tolerant, intolerant, darters/madtoms/and sculpins, darters, piscivorous fish, and invertevore/piscivore fish
+
+```{r Metrics}
+
+rtax <- traits_fin %>% 
+  mutate(CD = ifelse(TEMP_NRSA =="CD",1,0),
+         CDCL = ifelse(TEMP_NRSA =="CD"|TEMP_NRSA=="CL",1,0),
+         tol = ifelse(TOLERANCE_NRSA=="T",1,0),
+         intol = ifelse(TOLERANCE_NRSA=="S",1,0),
+         dms = ifelse(GENUS=="ETHEOSTOMA"|GENUS=="PERCINA"|
+                      GENUS=="NOTURUS"|GENUS=="COTTUS",1,0),
+         dart = ifelse(GENUS=="ETHEOSTOMA"|GENUS=="PERCINA",
+                       1,0),
+         pisc = ifelse(TROPHIC_NRSA=="C",1,0),
+         ip=ifelse(TROPHIC_NRSA=="C"|TROPHIC_NRSA=="I",1,0)) |> select(FINAL_NAME,Sci_name,everything())
+```
+
+### Put this data into long format.
+
+In this case, we will only include the first visit of the replicate sites - that is, Visit 1. filter(!is.na (count)) is only used as example - there are no na counts in the data, but if there were, this would delete them We will left_join the metrics we just coded
+
+If you have built a final filter on the table as we have, filtering out hybrids and unknowns, for example, a safe way to test this is to first run this code with filter(str_detect(FINAL_NAME,"HYBRID\|UNKNOWN"))
+
+This way it will filter for those rows that you will be deleting. You can have a look and make sure that is what you want, then put back the ! operator, re-run the code, and delete those rows.
+
+```{r}
+
+rtaxl <- rtax |>
+  select(FINAL_NAME,CD,CDCL,tol,intol,dms,dart,pisc,ip) |> pivot_longer(cols=!FINAL_NAME,names_to = "trait", values_to = "traitval")
+
+
+fish_rtaxl <- fshdat_states2 |> 
+  filter(VISIT_NO==1) |> 
+  filter(!is.na(count)) |> 
+  left_join(rtaxl, by="FINAL_NAME") |>
+  filter(!str_detect(FINAL_NAME,"HYBRID|UNKNOWN"))
+
+```
+
+There are a few more steps. There are proportions and richness values calculated for the 8 traits we chose. prop_met and rich_met will act as column names for our metrics
+
+```{r}
+met_1 <- fish_rtaxl |> 
+  mutate(counttrait=count*traitval,
+         traitprop=counttrait/totn,
+                prop_met=paste('P', trait, sep='_'), 
+                rich_met=paste('R', trait, sep='_'))
+
+met_2 <- met_1  |> 
+  group_by(SITE_ID, trait,totn,prop_met,rich_met) %>% 
+  summarise(trait_richness=length(counttrait),trait_prop=sum(traitprop)) |> 
+  replace_na(list(trait_prop=0)) |> 
+  ungroup()
+
+rich_wide <- met_2  |> 
+  select(SITE_ID, rich_met,trait_richness) |> 
+  pivot_wider (names_from=rich_met,values_from = trait_richness)
+
+prop_wide <- met_2  |> 
+  select(SITE_ID, prop_met,trait_prop) |>   pivot_wider(names_from=prop_met,values_from = trait_prop)
+
+```
+
+## Exporting data
+
+### write_csv (readr package)
+
+### write_xlsx (writexl package)
+
+Export a single dataset as any number of filetypes using the write\_ functions. Just type write\_ in the help window.
+
+write_xlsx is handy if you want to keep or share output in excel workbooks. Sheets can be written in the list function.
+
+write_csv is best when you will export a single data table
+
+```{r exporting data}
+
+write_xlsx(list(richness_mets=rich_wide,prop_mets=prop_wide), "state_metrics.xlsx")
+
+write_csv(rich_wide,"richness_mets.csv")
+
+```
+
+## Stream Cat
+
+The USEPA Stream Cat database information can be found at
+
+<https://www.epa.gov/national-aquatic-resource-surveys/streamcat-dataset>
+
+StreamCat currently contains over 600 metrics that include local catchment (Cat), watershed (Ws), and other special metrics. This is a great resource and will give you landscape variables instantly - already calculated at the watershed and catchment scales.
+
+There are a few provisos.
+
+StreamCat is based on COMID from NHDPlus. You will need to get COMID, which is somethimes easy and sometimes not. If you already have GIS data and your site are joined to flowlines - it's easy. If not - you have some work to do before you can download streamcat data. See below for an example of how to get COMID from latlong.
+
+Our dataset includes COMID, so I will demonstrate how to download streamcat data.
+
+Information on variables are at
+
+<https://www.epa.gov/national-aquatic-resource-surveys/streamcat-metrics-and-definitions>
+
+With every download, you will get the watershed area of the catchment (representing only the COMID), and the watershed upstream of most downstream point of the COMID. Also watershed areas of the 100M buffer of the flowline.
+
+It is important to remember that calculations are for the entire COMID - if your site is in the middle of the reach - there will be some bias.
+
+note that results='hide' in the code chunk will keep the code from printing the count of the loop results in rendered html.
+
+```{r streamcat, results='hide'}
+
+#This gives the list of the 5 Areaa of interest available for parameters
+region_params <- sc_get_params(param='areaOfInterest')
+# This will get you a tibble of the stream cat parameter addreviations that the code requires
+catpar <- as_tibble(sc_get_params(param='name')) |> 
+  arrange()
+
+sites_states2 <- fshdat_states2 |>
+  select(SITE_ID) |> 
+  distinct() |>    left_join(select(nrsa1819_sites,SITE_ID,COMID,GNIS_NAME,LAT_DD83,LON_DD83))
+
+nrsa_comids <- sites_states2  |>  
+ select(COMID) |> 
+ distinct()  |>  
+ paste0(collapse=",")
+
+#You will need to cut and paste the comids from the console into the code.
+nrsa_comids
+
+#Any streamcat data
+
+nrsa_strcat <- sc_get_data(metric='ICI,IWI,coalminedens,pctbl2019,pctgrs2019,pctshrb2019', aoi='other,ws', comid= "3819373, 15595311, 19392482, 9857897, 19389930, 3940470, 15385429, 3489643, 3366514, 15667657, 15637233, 13152261, 15588508, 19453177, 3486847, 19388962, 19388538, 3885568, 3484039, 13153689, 12997942, 5232388, 15634281, 9847285, 3366652, 5217115, 15656727, 3821363, 3486825, 15379381, 5215271, 18509814, 28033899, 3985996, 3485519, 6874903, 8144108, 8127337, 2600155, 6873479, 4581730, 8111939, 4521270, 19464184, 8103751, 8145244, 10924259, 4779715, 4742211, 8127341, 10218842, 4737583, 4195788, 4198436, 4481191, 8118503, 8145290, 3808057, 8152547, 4199444, 8975690, 8974046, 4151220, 4780831, 4496142, 2617016, 8150695, 19454003, 4784837, 9049881, 4188357, 932040303, 4738923, 4782173, 4480983, 8144470, 8972536, 8150895, 4519504, 3806257, 19455269, 19416715, 3370218, 435500, 19293142, 8445112, 19292832, 4548556, 6919900, 8422810, 3715934, 6935564, 8423020, 15433608, 19453829, 6925383, 4546574, 14365536, 3768684, 4548780, 8436674, 3775753, 12105108",showAreaSqKm=TRUE)
+
+```
+
+### Getting COMID from lat long data.
+
+COMID was part of this dataset. How do we get COMID if all we have is lat long of sites.
+
+Thanks to Marc Weber of EPA's ORD for this workflow.
+
+### for loops
+
+There are a lot of examples and explanations of for loops on the web - cut and paste, search and replace. IF you go this route - always check your output to make sure you get your intended result.
+
+<https://r4ds.had.co.nz/iteration.html>
+
+If this chunk is not running, add eval=FALSE {r,results='hide',eval=FALSE} (to the chunk header below to render the html).
+```{r,results='hide'}
+
+#Grab states 
+fish_states <- fshdat_states |> 
+  select(SITE_ID,STATE) |> 
+  distinct()
+#Make a dataframe of sites and lat longs
+nrsa_gis <- fish_states |> 
+  left_join(select(nrsa1819_sites,SITE_ID,LAT_DD83,LON_DD83)) |> 
+  st_as_sf(coords = c("LON_DD83", "LAT_DD83"),crs = 4269, agr = "constant") |> 
+  select(-STATE)
+
+
+#Get COMIDs using nhdplusTools package
+library(nhdplusTools)
+
+nrsa_gis$COMID<- NA
+for (i in 1:nrow(nrsa_gis)){
+  print (i)
+  nrsa_gis[i,'COMID'] <- discover_nhdplus_id(nrsa_gis[i,c('geometry')])
+}
+
+#That did the trick
+
+#Since we did have COMID with this particular dataset, we can see how close the NHD snap was to the correct COMID that was already QA'ed by NARS.  
+
+nrsa_gis_comp <- fish_states |> 
+  left_join(select(nrsa1819_sites,SITE_ID,COMID)) |> 
+  anti_join(nrsa_gis, by=c("SITE_ID","COMID"))
+
+
+### 3/114 isn't too shabby
+
+
+```
+
+### purrr
+
+You can get by without purrr, but if you want to simplify things when you are repeating operations, you really should look into it. The last bit is a tiny example - in this case, running the left_loin over those 3 tables.but I could have joined ten tables in that call. This can also work nicely for importing, for example, many spreadsheets in one call.
+
+```{r datset}
+
+nrsa_ls <- fshdat_states2 |> 
+  select(-FINAL_NAME,-NON_NATIVE,-count,-prop,) |> 
+  distinct() |> 
+  filter(!VISIT_NO==2) |> 
+  left_join(select(sites_states2,SITE_ID,COMID,LAT_DD83,LON_DD83),by="SITE_ID") |>
+  left_join(select(nrsa1819_disturb,SITE_ID,FISH_MMI_COND,INSTRMCVR_COND),by="SITE_ID") |> 
+  left_join(rename(nrsa_strcat,COMID=comid), by="COMID") |>
+  distinct() 
+
+nrsa_fsh_ls <- purrr::reduce(list(nrsa_ls,rich_wide,prop_wide), dplyr::left_join, by = 'SITE_ID')
+
+write_csv(nrsa_fsh_ls,"nrsa_fsh_ls.csv")
+
+```
